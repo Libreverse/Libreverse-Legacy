@@ -56,7 +56,7 @@
 @media screen and (width <= 600px) {
     .sp-main {
         white-space: normal;
-        word-wrap: break-word;
+        overflow-wrap: break-word;
         line-height: 0.9;
         margin-top: 5%;
         margin-bottom: 5%;
