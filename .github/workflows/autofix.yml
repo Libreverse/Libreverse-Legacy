@@ -1,8 +1,6 @@
 name: Autofix (formatters and linters)
 
 on:
-    pull_request:
-        branches: ["main"]
     push:
         branches: ["main"]
 
@@ -10,23 +8,17 @@ permissions:
     contents: write
 
 concurrency:
-    group: autofix-${{ github.event.pull_request.number || github.ref_name }}
+    group: autofix-${{ github.ref_name }}
     cancel-in-progress: true
 
 jobs:
     autofix:
         name: Apply autofixes to changed files
         runs-on: ubuntu-22.04
-        # Allow PRs from same repo, and direct pushes, but avoid loops from bot commits and skip autofix commits
+        # Avoid loops from bot commits and skip autofix commits
         if: >
-            (
-              github.event_name == 'pull_request' &&
-              github.event.pull_request.head.repo.full_name == github.repository
-            ) || (
-              github.event_name == 'push' &&
-              github.actor != 'github-actions[bot]' &&
-              !contains(github.event.head_commit.message, 'chore(autofix)')
-            )
+            github.actor != 'github-actions[bot]' &&
+            !contains(github.event.head_commit.message, 'chore(autofix)')
         steps:
             - name: Check out code
               uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
