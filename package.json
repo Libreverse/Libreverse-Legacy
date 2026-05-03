@@ -56,7 +56,7 @@
         "react-on-rails": "16.0.0",
         "react_on_rails": "^2.0.0-rc.2",
         "sassy-lists": "^3.0.1",
-        "shakapacker": "8.4.0",
+        "shakapacker": "10.0.0",
         "spin.js": "^4.1.2",
         "stimulus-store": "^0.0.3",
         "stimulus-use": "^0.52.3",
