@@ -91,7 +91,7 @@
         "docsify": "^4.13.1",
         "eslint": "^9.36.0",
         "eslint-config-prettier": "^9.1.2",
-        "eslint-plugin-jest": "^28.14.0",
+        "eslint-plugin-jest": "^29.15.2",
         "eslint-plugin-unicorn": "^56.0.1",
         "globals": "^17.6.0",
         "jest": "^29.7.0",
