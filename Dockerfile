@@ -4,8 +4,8 @@
 FROM phusion/passenger-ruby34:latest
 
 # Better optimisation flags
-ENV CFLAGS="-O3 -march=native -pipe -flto -fno-fastmath"
-ENV CXXFLAGS="-O3 -march=native -pipe -flto -fno-fastmath"
+ENV CFLAGS="-O3 -march=x86-64-v3 -pipe -flto -fno-fast-math"
+ENV CXXFLAGS="-O3 -march=x86-64-v3 -pipe -flto -fno-fast-math"
 ENV LDFLAGS="-flto -Wl,-O3 -Wl,-Bsymbolic-functions -Wl,--as-needed"
 ENV RUBYOPT="--yjit --yjit-exec-mem-size=2 --yjit-mem-size=3 --yjit-call-threshold=1 --yjit-cold-threshold=1000000 --yjit-code-gc"
 
