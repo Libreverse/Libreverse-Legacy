@@ -46,7 +46,7 @@
         "leaflet.a11y": "^0.6.0",
         "leaflet.offline": "^3.1.0",
         "leaflet.translate": "^0.6.0",
-        "locomotive-scroll": "^4.1.4",
+        "locomotive-scroll": "^5.0.1",
         "mini-css-extract-plugin": "^2.9.4",
         "p2p": "file:vendor/javascript/p2p",
         "postprocessing": "^6.37.8",
