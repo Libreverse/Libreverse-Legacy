@@ -127,7 +127,7 @@ production:
     <<: *default
 
     # Production depends on precompilation of packs prior to booting for performance.
-    compile: false
+    compile: true
 
     # Use content hash for naming assets. Cannot be overridden in production.
     useContentHash: true
