@@ -125,7 +125,7 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sor
 # so RVM + Bundler must be on the PATH.
 RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
     && rvm use "$RUBY_VER" \
-    && SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \
+    && RUBYOPT="-rbundler/setup" SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \
        bun run build \
     && rm -rf public/vite-dev public/vite-test'
 
