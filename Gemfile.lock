@@ -858,7 +858,7 @@ GEM
       faraday-follow_redirects
     syntax_tree (6.3.0)
       prettier_print (>= 1.2.0)
-    sys-filesystem (1.5.4)
+    sys-filesystem (1.5.5)
       ffi (~> 1.1)
     sysexits (1.2.0)
     temple (0.10.4)
