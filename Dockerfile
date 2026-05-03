@@ -91,7 +91,8 @@ RUN set -eux; \
 
 ## Install production gems (exclude development & test groups) with verbose logs
 ## and verify the vendored gem is present and loadable
-RUN bash -lc 'rvm --default use ruby-3.4.2 \
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+    && rvm --default use "$RUBY_VER" \
     && bundle config set without "development test" \
     && bundle install --jobs=$(nproc) --retry 3 --verbose \
     && bundle info google_robotstxt_parser \
@@ -115,7 +116,9 @@ RUN chown -R app:app /home/app/webapp
 RUN bun install --frozen-lockfile
 
 # Precompile Rails bootsnap cache
-RUN bash -lc 'rvm --default use ruby-3.4.2 && bundle exec bootsnap precompile app/ lib/'
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+    && rvm --default use "$RUBY_VER" \
+    && bundle exec bootsnap precompile app/ lib/'
 
 # Precompile assets with vite (using bun)
 RUN SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \

@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-ruby "3.4.2"
+ruby ">= 3.4.0", "< 3.5"
 
 gem "active_hashcash"
 gem "activerecord-enhancedsqlite3-adapter"
