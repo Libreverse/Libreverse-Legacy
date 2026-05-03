@@ -35,7 +35,7 @@ class TextPreprocessingService
 
     # Normalize text (lowercase, remove punctuation, etc.)
     def normalize_text(text)
-      text.downcase.gsub(PUNCTUATION_REGEX, ' ').strip
+      text.downcase.gsub(PUNCTUATION_REGEX, " ").strip
     end
 
     # Split text into words
