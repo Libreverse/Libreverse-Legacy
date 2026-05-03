@@ -121,9 +121,13 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sor
     && bundle exec bootsnap precompile app/ lib/'
 
 # Precompile assets with vite (using bun)
-RUN SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \
-    bun run build \
-    && rm -rf public/vite-dev public/vite-test
+# vite-plugin-erb shells out to Ruby for .js.erb files (e.g. Thredded),
+# so RVM + Bundler must be on the PATH.
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+    && rvm use "$RUBY_VER" \
+    && SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \
+       bun run build \
+    && rm -rf public/vite-dev public/vite-test'
 
 # Remove default Nginx site and add custom config for Rails app
 RUN rm /etc/nginx/sites-enabled/default
