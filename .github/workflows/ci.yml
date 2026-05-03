@@ -1,5 +1,10 @@
 name: CI/CD Pipeline
 
+# Cancel in-progress runs for the same branch/PR to save CI time
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 # Restrict workflow permissions for security
 permissions:
     contents: read
@@ -263,7 +268,7 @@ jobs:
             contents: read
             packages: write
         needs: [formatting, validation, security-analysis, code-quality] # removed testing
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
 
         steps:
             - name: Check out code
@@ -283,14 +288,14 @@ jobs:
 
             - name: Build Docker image
               run: |
-                  docker build -t quay.io/georgebaskervil/libreverse:alpha .
+                  docker build -t quay.io/georgebaskervil/libreverse-legacy:latest .
 
             - name: Push to Quay.io
               run: |
-                  docker push quay.io/georgebaskervil/libreverse:alpha
+                  docker push quay.io/georgebaskervil/libreverse-legacy:latest
 
             - name: Trigger Coolify Redeploy
               run: |
-                  curl -X GET "https://c.geor.me/api/v1/deploy?uuid=p4wg4ssgokg08s0wkk4cw0sk&force=false" \
+                  curl -X GET "https://c.geor.me/api/v1/deploy?uuid=${{ secrets.COOLIFY_DEPLOY_UUID }}&force=false" \
                   -H "Content-Type: application/json" \
                   -H "authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"

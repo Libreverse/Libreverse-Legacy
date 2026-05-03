@@ -1,0 +1,35 @@
+name: Auto approve
+
+on:
+    pull_request_target:
+    workflow_dispatch:
+
+jobs:
+    auto-approve:
+        runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/create-github-app-token@v1
+              id: app-token
+              with:
+                  app-id: ${{ secrets.APP_ID }}
+                  private-key: ${{ secrets.APP_PRIVATE_KEY }}
+            - uses: hmarr/auto-approve-action@v4
+              if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
+              with:
+                  github-token: ${{ steps.app-token.outputs.token }}
+            - name: Bulk approve Dependabot PRs
+              if: github.event_name == 'workflow_dispatch'
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
+              run: |
+                  # List open PRs from dependabot and approve them
+                  prs=$(gh pr list --author dependabot[bot] --state open --json number --jq '.[].number')
+                  for pr in $prs; do
+                    echo "Approving PR #$pr"
+                    gh pr review $pr --approve
+                    echo "Merging and cleaning up PR #$pr"
+                    gh pr merge $pr --rebase --delete-branch --auto || echo "Failed to merge PR #$pr (may be conflicting or in progress)"
+                  done
