@@ -288,11 +288,11 @@ jobs:
 
             - name: Build Docker image
               run: |
-                  docker build -t quay.io/georgebaskervil/libreverse-legacy:latest .
+                  docker build -t quay.io/georgebaskervil/libreverse:legacy .
 
             - name: Push to Quay.io
               run: |
-                  docker push quay.io/georgebaskervil/libreverse-legacy:latest
+                  docker push quay.io/georgebaskervil/libreverse:legacy
 
             - name: Trigger Coolify Redeploy
               run: |
