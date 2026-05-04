@@ -19,18 +19,19 @@ class ConsentController < ApplicationController
     # POST /consent/accept
     def accept
         remember_opt_in = params[:remember_opt_in] == "1"
+        cookie_settings = EEAMode.compliance[:cookie_settings]
 
         # Set secure cookie with all recommended settings
         cookies.signed[EEAMode::CONSENT_COOKIE_KEY] = {
           value: "1",
-          expires: EEAMode::COMPLIANCE[:cookie_settings][:expiration].from_now,
-          same_site: EEAMode::COMPLIANCE[:cookie_settings][:same_site],
-          secure: if EEAMode::COMPLIANCE[:cookie_settings][:secure].is_a?(Proc)
-                        EEAMode::COMPLIANCE[:cookie_settings][:secure].call
+          expires: cookie_settings[:expiration].from_now,
+          same_site: cookie_settings[:same_site],
+          secure: if cookie_settings[:secure].is_a?(Proc)
+                        cookie_settings[:secure].call
                   else
-                        EEAMode::COMPLIANCE[:cookie_settings][:secure]
+                        cookie_settings[:secure]
                   end,
-          httponly: EEAMode::COMPLIANCE[:cookie_settings][:httponly]
+          httponly: cookie_settings[:httponly]
         }
 
         if remember_opt_in
