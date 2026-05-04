@@ -129,6 +129,13 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sor
        bun run build \
     && rm -rf public/vite-dev public/vite-test'
 
+# Compile Shakapacker (webpack) packs — required by javascript_pack_tag in layouts.
+# This populates public/packs/manifest.json; must run after bun install.
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+    && rvm use "$RUBY_VER" \
+    && RUBYOPT="-rbundler/setup" SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production \
+       bundle exec rails shakapacker:compile'
+
 # Remove default Nginx site and add custom config for Rails app
 RUN rm /etc/nginx/sites-enabled/default
 RUN mkdir -p /etc/nginx/conf.d /etc/nginx/main.d
