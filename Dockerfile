@@ -115,6 +115,12 @@ RUN chown -R app:app /home/app/webapp
 # Now install JS dependencies (vendor/javascript/p2p should exist)
 RUN bun install --frozen-lockfile
 
+# Make codemirror CSS available to Sprockets (comfortable_media_surfer imports it).
+# vendor/assets is in Sprockets' default load path, so this satisfies the import
+# without exposing all of node_modules through Propshaft's asset serve paths.
+RUN mkdir -p vendor/assets/stylesheets/codemirror/lib && \
+    cp node_modules/codemirror/lib/codemirror.css vendor/assets/stylesheets/codemirror/lib/codemirror.css
+
 # Precompile Rails bootsnap cache
 RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
     && rvm --default use "$RUBY_VER" \
