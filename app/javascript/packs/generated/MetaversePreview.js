@@ -1,10 +1,6 @@
 import ReactOnRails from "react-on-rails/client";
 import MetaversePreview from "../../src/Metaverse3D/ror_components/MetaversePreview.jsx";
 
-console.info("[MetaverseHydration] pack evaluating", {
-    ReactOnRailsImported: typeof ReactOnRails,
-});
-
 ReactOnRails.setOptions({
     turbo: true,
 });

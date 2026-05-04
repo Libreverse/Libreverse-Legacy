@@ -28,6 +28,7 @@ export default class extends ApplicationController
 
   connect: ->
     super.connect()
+    @active = true
     @setupRainyDay()
     @setupParallax()
     @setupResizeListener()
@@ -35,6 +36,7 @@ export default class extends ApplicationController
 
   disconnect: ->
     super.disconnect()
+    @active = false
     @rainyday?.destroy()
     @rainyday = null
     @removeParallax?()
@@ -68,6 +70,7 @@ export default class extends ApplicationController
     img.src = @backgroundUrlValue
 
     img.onload = =>
+      return unless @active and @element.isConnected
       # Create a canvas that fills the parent
       canvas = document.createElement('canvas')
       canvas.width = @element.offsetWidth
@@ -131,9 +134,9 @@ export default class extends ApplicationController
     return
 
   updateRainyDayDimensions: ->
-    return unless @rainyday?
+    return unless @active and @rainyday?
     # Remove and re-setup RainyDay to update canvas size
-    @rainyday.destroy()
+    @rainyday.destroy?()
     @rainyday = null
     @setupRainyDay()
     return

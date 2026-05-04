@@ -4,6 +4,7 @@ import LocomotiveScroll from "locomotive-scroll"
 export default class extends Controller
   connect: ->
     @scroll = undefined
+    @connected = true
     @boundDestroyIfNeeded = @destroyIfNeeded.bind(@)
     @boundDestroy = @destroy.bind(@)
     @handleTurboLoad = @handleTurboLoad.bind(@)
@@ -13,38 +14,27 @@ export default class extends Controller
     return
 
   disconnect: ->
+    @connected = false
     @destroy()
     @removeEventListeners()
     return
 
   init: ->
+    return unless @connected
     try
       @scroll ||= new LocomotiveScroll({
-        el: @element or document.querySelector('[data-scroll-container]') or document.body,
-        smooth: true,
-        repeat: true,
-        gestureDirection: 'vertical',
-        reloadOnContextChange: false,
-        resetNativeScroll: false,
-        smartphone: {
-          smooth: true
-        },
-        tablet: {
-          smooth: true
-        }
+        autoStart: true,
+        scrollCallback: (args) =>
+          event = new CustomEvent('locomotive-scroll', {
+            detail: args
+          })
+          document.dispatchEvent(event)
       })
 
-      # Expose globally for glass container integration
       window.locomotiveScroll = @scroll
-
-      # Dispatch custom event when scroll updates
-      @scroll.on 'scroll', (args) =>
-        event = new CustomEvent('locomotive-scroll', {
-          detail: args
-        })
-        document.dispatchEvent(event)
     catch error
       console.error "Failed to initialize LocomotiveScroll:", error
+      @destroy()
     return
 
   destroy: ->
@@ -59,6 +49,8 @@ export default class extends Controller
     if @scroll?
       if typeof @scroll.update is "function"
         @scroll.update()
+      else if typeof @scroll.resize is "function"
+        @scroll.resize()
       else if typeof @scroll.start is "function"
         @scroll.start()
     return

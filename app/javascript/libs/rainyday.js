@@ -365,8 +365,8 @@ function RainyDay(options) {
     } else {
         var self = this;
         var style =
-                source.currentStyle ||
-                globalThis.getComputedStyle(source, false),
+            source.currentStyle ||
+            globalThis.getComputedStyle(source, false),
             bi = style.backgroundImage.slice(4, -1).replaceAll('"', "");
 
         var imgTemporary = document.createElement("img");
@@ -602,6 +602,8 @@ RainyDay.prototype.checkSize = function () {
  * Start animation loop
  */
 RainyDay.prototype.animateDrops = function () {
+    if (!Array.isArray(this.drops)) return;
+
     if (this.addDropCallback) {
         this.addDropCallback();
     }
@@ -1115,23 +1117,23 @@ RainyDay.prototype.REFLECTION_NONE = function () {
 RainyDay.prototype.REFLECTION_MINIATURE = function (drop) {
     var sx = Math.max(
         (drop.x - this.options.reflectionDropMappingWidth) /
-            this.options.reflectionScaledownFactor,
+        this.options.reflectionScaledownFactor,
         0,
     );
     var sy = Math.max(
         (drop.y - this.options.reflectionDropMappingHeight) /
-            this.options.reflectionScaledownFactor,
+        this.options.reflectionScaledownFactor,
         0,
     );
 
     var sw = this.positiveMin(
         (this.options.reflectionDropMappingWidth * 2) /
-            this.options.reflectionScaledownFactor,
+        this.options.reflectionScaledownFactor,
         this.reflected.width - sx,
     );
     var sh = this.positiveMin(
         (this.options.reflectionDropMappingHeight * 2) /
-            this.options.reflectionScaledownFactor,
+        this.options.reflectionScaledownFactor,
         this.reflected.height - sy,
     );
     var dx = Math.max(drop.x - 1.1 * drop.r, 0);
@@ -1166,7 +1168,7 @@ RainyDay.prototype.COLLISION_SIMPLE = function (drop, collisions) {
             Math.abs(dx) < radiusSum &&
             Math.abs(dy) < radiusSum &&
             Math.sqrt(Math.pow(drop.x - p.x, 2) + Math.pow(drop.y - p.y, 2)) <
-                drop.r + p.r
+            drop.r + p.r
         ) {
             drop2 = p;
             break;
@@ -1478,7 +1480,7 @@ RainyDay.prototype.stackBlurCanvasRGB = function (width, height, radius) {
             p =
                 (x +
                     ((p = y + radiusPlus1) < height - 1 ? p : height - 1) *
-                        width) <<
+                    width) <<
                 2;
 
             rSum += rInSum += stackIn.r = pixels[p];

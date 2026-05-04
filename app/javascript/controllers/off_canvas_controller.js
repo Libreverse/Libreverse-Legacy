@@ -15,6 +15,7 @@ export default class extends Controller {
     };
 
     connect() {
+        this.connected = true;
         // Initialize Foundation's jQuery integration
         FoundationUtils.initializeFoundation();
 
@@ -33,11 +34,9 @@ export default class extends Controller {
     }
 
     disconnect() {
+        this.connected = false;
         // Clean up Foundation instance
-        if (this.offCanvasInstance) {
-            this.offCanvasInstance.destroy();
-            this.offCanvasInstance = undefined;
-        }
+        this.destroyOffCanvasInstance();
 
         // Remove Turbo event listeners
         document.removeEventListener("turbo:load", this.handleTurboLoad);
@@ -45,6 +44,7 @@ export default class extends Controller {
     }
 
     handleTurboLoad() {
+        if (!this.connected || !this.element.isConnected) return;
         this.initializeOffCanvas();
     }
 
@@ -52,17 +52,18 @@ export default class extends Controller {
         const $ = FoundationUtils.initializeFoundation();
 
         // Use the target element (could be different from controller element)
-        const targetElement = this.offCanvasElement;
+        const targetElement = this.hasTargetIdValue
+            ? document.querySelector(`#${this.targetIdValue}`)
+            : this.element;
+        this.offCanvasElement = targetElement;
 
-        if (!targetElement) {
+        if (!this.connected || !targetElement?.isConnected) {
             console.error("[OffCanvasController] Target element not found");
             return;
         }
 
         // Destroy existing instance if it exists
-        if (this.offCanvasInstance) {
-            this.offCanvasInstance.destroy();
-        }
+        this.destroyOffCanvasInstance();
 
         // Set up options
         const options = {
@@ -75,11 +76,24 @@ export default class extends Controller {
 
         // Initialize Foundation OffCanvas
         import("foundation-sites").then(({ Foundation }) => {
+            if (!this.connected || !targetElement.isConnected) return;
             this.offCanvasInstance = new Foundation.OffCanvas(
                 $(targetElement),
                 options,
             );
         });
+    }
+
+    destroyOffCanvasInstance() {
+        if (!this.offCanvasInstance) return;
+
+        try {
+            this.offCanvasInstance.destroy();
+        } catch {
+            this.offCanvasInstance = undefined;
+        }
+
+        this.offCanvasInstance = undefined;
     }
 
     // Action methods for controlling the off-canvas
