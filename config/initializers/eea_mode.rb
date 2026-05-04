@@ -124,23 +124,3 @@ ActiveSupport.on_load(:action_controller_base) do
   include EEAMode::ConsentEnforcer
 end
 
-# -----------------------------------------------------------------------------
-# Runtime additions: Consent controller + routes
-# -----------------------------------------------------------------------------
-
-# Remove eager controller definitions to avoid ApplicationController missing
-
-Rails.application.routes.append do
-  rs = Rails.application.routes
-  unless rs.named_routes.key?(:consent_accept)
-    scope "/" do
-      get  "consent",          to: "consents#show", as: :consent unless rs.named_routes.key?(:consent)
-      post "consent/accept",   to: "consents#accept",  as: :consent_accept
-      post "consent/decline",  to: "consents#decline", as: :consent_decline
-
-      # -----------------------------------------------------------------------
-      # Policies (Privacy & Cookies)
-      # -----------------------------------------------------------------------
-    end
-  end
-end

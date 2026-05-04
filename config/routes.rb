@@ -126,12 +126,12 @@ Rails.application.routes.draw do
   get "/api/activitypub/experiences", to: "federation#experiences_collection"
   get "/api/activitypub/search", to: "federation#search"
   post "/api/activitypub/announce", to: "federation#announce"
-  post "/api/activitypub/announce", to: "federation#announce"
 
   # Consent routes using Turbo Streams
+  get  "consent", to: "consent#screen", as: :consent
   get  "consent/screen", to: "consent#screen", as: :consent_screen
-  post "consent/accept", to: "consent#accept"
-  post "consent/decline", to: "consent#decline"
+  post "consent/accept", to: "consent#accept", as: :consent_accept
+  post "consent/decline", to: "consent#decline", as: :consent_decline
 
   # Mount audits1984 engine for auditing console sessions
   mount Audits1984::Engine => "/console"
