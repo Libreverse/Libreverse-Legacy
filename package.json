@@ -31,6 +31,7 @@
         "cable_ready": "5.0.6",
         "cannon-es": "^0.20.0",
         "codemirror": "^5.65.16",
+        "flatpickr": "^4.6.13",
         "compression-webpack-plugin": "^11.1.0",
         "css-loader": "^7.1.2",
         "css-minimizer-webpack-plugin": "^7.0.2",
