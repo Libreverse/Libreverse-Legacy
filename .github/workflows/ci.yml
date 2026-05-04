@@ -284,8 +284,17 @@ jobs:
                   password: ${{ secrets.QUAY_PASSWORD }}
 
             - name: Build Docker image
+              env:
+                  DOCKER_BUILDKIT: "1"
+                  TIDB_HOST: ${{ secrets.TIDB_HOST }}
+                  TIDB_USERNAME: ${{ secrets.TIDB_USERNAME }}
+                  TIDB_PASSWORD: ${{ secrets.TIDB_PASSWORD }}
               run: |
-                  docker build -t quay.io/georgebaskervil/libreverse:legacy .
+                  docker build \
+                    --secret id=tidb_host,env=TIDB_HOST \
+                    --secret id=tidb_username,env=TIDB_USERNAME \
+                    --secret id=tidb_password,env=TIDB_PASSWORD \
+                    -t quay.io/georgebaskervil/libreverse:legacy .
 
             - name: Push to Quay.io
               run: |

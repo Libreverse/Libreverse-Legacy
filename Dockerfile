@@ -120,20 +120,24 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sor
     && rvm --default use "$RUBY_VER" \
     && bundle exec bootsnap precompile app/ lib/'
 
-# Precompile assets with vite (using bun)
-# vite-plugin-erb shells out to Ruby for .js.erb files (e.g. Thredded),
-# so RVM + Bundler must be on the PATH.
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+# Precompile all assets in one step.
+# vite_ruby hooks into assets:precompile via vite:build_all.
+# shakapacker hooks into assets:precompile via shakapacker:compile.
+# TiDB credentials are required because assets:precompile loads the Rails environment
+# (account.rb checks table_exists? at class load time). Credentials are mounted via
+# BuildKit secrets and are never written into any image layer.
+RUN --mount=type=secret,id=tidb_host \
+    --mount=type=secret,id=tidb_username \
+    --mount=type=secret,id=tidb_password \
+    bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
     && rvm use "$RUBY_VER" \
-    && RUBYOPT="-rbundler/setup" SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production VITE_RUBY_MODE=production \
-       bun run build \
+    && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
+    && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
+    && export TIDB_PASSWORD=$(cat /run/secrets/tidb_password) \
+    && RUBYOPT="-rbundler/setup" SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production NODE_ENV=production \
+       VITE_RUBY_SKIP_ASSETS_PRECOMPILE_INSTALL=true \
+       bundle exec rails assets:precompile \
     && rm -rf public/vite-dev public/vite-test'
-
-# Compile Shakapacker (webpack) packs — required by javascript_pack_tag in layouts.
-# Use bin/shakapacker directly to avoid loading the Rails environment (and hitting the DB).
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
-    && rvm use "$RUBY_VER" \
-    && NODE_ENV=production RAILS_ENV=production bundle exec shakapacker'
 
 # Remove default Nginx site and add custom config for Rails app
 RUN rm /etc/nginx/sites-enabled/default

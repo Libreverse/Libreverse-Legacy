@@ -19,7 +19,7 @@ class Account < ApplicationRecord
                                     name_field: :username,
                                     profile_url_method: :profile_url
           end
-        rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+        rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid, ActiveRecord::ConnectionNotEstablished
           # Skip federails setup if database/table doesn't exist (e.g., during migrations)
         end
       end
