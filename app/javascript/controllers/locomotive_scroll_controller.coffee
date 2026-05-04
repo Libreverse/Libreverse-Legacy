@@ -49,7 +49,7 @@ export default class extends Controller
 
   destroy: ->
     if @scroll?
-      @scroll.destroy()
+      @scroll.destroy?()
       @scroll = undefined
       # Clean up global reference
       window.locomotiveScroll = undefined
@@ -57,7 +57,10 @@ export default class extends Controller
 
   resume: ->
     if @scroll?
-      @scroll.update()
+      if typeof @scroll.update is "function"
+        @scroll.update()
+      else if typeof @scroll.start is "function"
+        @scroll.start()
     return
 
   destroyIfNeeded: (event) =>
