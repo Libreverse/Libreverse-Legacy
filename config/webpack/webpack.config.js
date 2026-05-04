@@ -1,4 +1,3 @@
-import { env } from "shakapacker";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -6,9 +5,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const nodeEnv = process.env.NODE_ENV || "development";
+
 const environmentSpecificConfig = async () => {
     const extension = ".cjs";
-    const configPath = path.resolve(__dirname, `${env.nodeEnv}${extension}`);
+    const configPath = path.resolve(__dirname, `${nodeEnv}${extension}`);
     if (!existsSync(configPath)) {
         throw new Error(
             `Could not find file to load ${configPath}, based on NODE_ENV`,
