@@ -19,7 +19,7 @@
         "@react-three/drei": "^10.7.6",
         "@react-three/fiber": "^9.3.0",
         "@react-three/postprocessing": "^3.0.4",
-        "@sentry/browser": "^9.46.0",
+        "@sentry/browser": "^10.52.0",
         "@sxwjs/sxwjs": "^4.0.0",
         "@types/babel__core": "^7.20.5",
         "@types/webpack": "^5.28.5",
