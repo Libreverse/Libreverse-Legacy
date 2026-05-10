@@ -88,7 +88,7 @@
         "acorn": "^8.15.0",
         "babel-jest": "^29.7.0",
         "coffeescript": "^2.7.0",
-        "cssnano": "^7.1.1",
+        "cssnano": "^8.0.1",
         "cssnano-preset-advanced": "^7.0.9",
         "docsify": "^4.13.1",
         "eslint": "^9.36.0",
