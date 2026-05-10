@@ -91,7 +91,7 @@
         "cssnano": "^8.0.1",
         "cssnano-preset-advanced": "^7.0.9",
         "docsify": "^4.13.1",
-        "eslint": "^9.36.0",
+        "eslint": "^10.3.0",
         "eslint-config-prettier": "^9.1.2",
         "eslint-plugin-jest": "^29.15.2",
         "eslint-plugin-unicorn": "^56.0.1",
