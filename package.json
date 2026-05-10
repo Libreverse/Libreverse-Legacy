@@ -55,7 +55,7 @@
         "prop-types": "^15.8.1",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
-        "react-on-rails": "16.0.0",
+        "react-on-rails": "16.6.0",
         "react_on_rails": "^2.0.0-rc.2",
         "sassy-lists": "^3.0.1",
         "shakapacker": "9.5.0",
