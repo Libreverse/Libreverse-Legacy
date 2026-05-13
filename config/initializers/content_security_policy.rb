@@ -44,6 +44,15 @@ Rails.application.configure do
     # Iframes for Experience viewer (data-URI) remain allowed.
     policy.frame_src :self, :data
 
+    # Allow any subdomain of the configured instance domain to embed this app.
+    # Uses frame_ancestors (the modern replacement for X-Frame-Options) so wildcard subdomains work.
+    # Evaluated per-request via proc so the domain is read after full initialization (DB accessible).
+    policy.frame_ancestors :self, :data, -> {
+      bare_domain = LibreverseInstance.instance_domain.sub(/:\d+$/, "")
+      [ "https://#{bare_domain}", "https://*.#{bare_domain}",
+        "http://#{bare_domain}", "http://*.#{bare_domain}" ]
+    }
+
     # Test allowances – blob URIs used by rails system tests
     policy.script_src(*policy.script_src, :blob) if Rails.env.test?
 

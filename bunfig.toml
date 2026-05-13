@@ -1,0 +1,2 @@
+# Bun configuration
+# Package age enforcement is handled via package.json preinstall script

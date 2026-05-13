@@ -12,11 +12,39 @@ permissions:
     actions: read
 
 on:
+    pull_request:
     push:
         branches:
             - "main"
 
 jobs:
+    package-age-gates:
+        name: Package age gates
+        runs-on: ubuntu-22.04
+        permissions:
+            contents: read
+        steps:
+            - name: Check out code
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+            - name: Setup Ruby
+              uses: ruby/setup-ruby@v1
+              with:
+                  bundler-cache: false
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version-file: .bun-version
+
+            - name: Check npm/Bun package ages
+              shell: bash
+              run: bun scripts/bun-age-gate.mjs
+
+            - name: Check RubyGems package ages
+              shell: bash
+              run: ruby scripts/gem-age-gate.rb
+
     # Code formatting tools (runs in parallel)
     formatting:
         name: ${{ matrix.tool }}

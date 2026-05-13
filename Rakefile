@@ -42,4 +42,9 @@ namespace :bundle do
     end
     puts 'Platform enforcement complete.'
   end
+
+  desc "Check all gems are at least 1 week old (security gate)"
+  task age_gate: :environment do
+    system('ruby', 'scripts/gem-age-gate.rb') || exit(1)
+  end
 end

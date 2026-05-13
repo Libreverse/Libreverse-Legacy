@@ -25,6 +25,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
               run: |
+                  gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --watch --fail-fast
                   gh pr merge ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --rebase --delete-branch --auto || echo "Failed to auto-merge (may need retry)"
             - name: Bulk approve Dependabot PRs
               if: github.event_name == 'workflow_dispatch'
@@ -37,5 +38,6 @@ jobs:
                     echo "Approving PR #$pr"
                     gh pr review $pr --approve
                     echo "Merging and cleaning up PR #$pr"
+                    gh pr checks $pr --repo ${{ github.repository }} --watch --fail-fast
                     gh pr merge $pr --rebase --delete-branch --auto || echo "Failed to merge PR #$pr (may be conflicting or in progress)"
                   done

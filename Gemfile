@@ -2,7 +2,11 @@
 
 source "https://rubygems.org"
 
-ruby ">= 3.4.0", "< 3.5"
+ruby "3.3.7"
+
+# Security: Enforce 1-week minimum age for all gems
+# Install with: bundle plugin install bundler-age_gate --path plugins/bundler-age_gate
+plugin 'bundler-age_gate', path: 'plugins/bundler-age_gate'
 
 gem "active_hashcash"
 gem "activerecord-enhancedsqlite3-adapter"
