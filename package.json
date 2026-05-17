@@ -63,7 +63,7 @@
         "stimulus-store": "^0.0.3",
         "stimulus-use": "^0.52.3",
         "stimulus-vite-helpers": "^3.1.0",
-        "stimulus_reflex": "3.5.3",
+        "stimulus_reflex": "3.5.5",
         "style-loader": "^4.0.0",
         "terser-webpack-plugin": "^5.3.14",
         "three": "^0.184.0",
