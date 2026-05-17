@@ -24,7 +24,7 @@
         "@types/babel__core": "^7.20.5",
         "@types/webpack": "^5.28.5",
         "@vitejs/plugin-legacy": "^7.2.1",
-        "@y-rb/actioncable": "^0.1.5",
+        "@y-rb/actioncable": "^0.3.0",
         "babel-loader": "^10.0.0",
         "babel-plugin-macros": "^3.1.0",
         "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
