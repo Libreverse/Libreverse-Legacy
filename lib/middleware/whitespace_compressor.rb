@@ -59,29 +59,29 @@ class WhitespaceCompressor
           remove_processing_instructions: true                 # Remove processing instructions
         }
 
-  # Always apply minify_html for optimal compression - it's more effective than HAML's whitespace removal
-  minify_html(processed, minify_config)
+        # Always apply minify_html for optimal compression - it's more effective than HAML's whitespace removal
+        safe_minify_html(processed, minify_config)
       end || begin
         # Fallback path when Rails.cache is unavailable
         processed = minify_jsonld_scripts_with_nokogiri(html)
         processed = minify_srcdoc_iframes_with_nokogiri(processed)
-        minify_html(processed, {
-                      allow_noncompliant_unquoted_attribute_values: true,
-                      allow_optimal_entities: true,
-                      allow_removing_spaces_between_attributes: true,
-                      keep_closing_tags: false,
-                      keep_comments: false,
-                      keep_html_and_head_opening_tags: false,
-                      keep_input_type_text_attr: false,
-                      keep_ssi_comments: false,
-                      minify_css: false,
-                      minify_doctype: true,
-                      minify_js: false,
-                      preserve_brace_template_syntax: false,
-                      preserve_chevron_percent_template_syntax: false,
-                      remove_bangs: true,
-                      remove_processing_instructions: true
-                    })
+        safe_minify_html(processed, {
+                           allow_noncompliant_unquoted_attribute_values: true,
+                           allow_optimal_entities: true,
+                           allow_removing_spaces_between_attributes: true,
+                           keep_closing_tags: false,
+                           keep_comments: false,
+                           keep_html_and_head_opening_tags: false,
+                           keep_input_type_text_attr: false,
+                           keep_ssi_comments: false,
+                           minify_css: false,
+                           minify_doctype: true,
+                           minify_js: false,
+                           preserve_brace_template_syntax: false,
+                           preserve_chevron_percent_template_syntax: false,
+                           remove_bangs: true,
+                           remove_processing_instructions: true
+                         })
       end
     end
 
@@ -128,7 +128,7 @@ class WhitespaceCompressor
       next unless content.lstrip.start_with?("<")
 
       begin
-        minified_content = minify_html(content, {
+        minified_content = safe_minify_html(content, {
                                          allow_noncompliant_unquoted_attribute_values: true,
                                          allow_optimal_entities: true,
                                          allow_removing_spaces_between_attributes: true,
@@ -139,7 +139,7 @@ class WhitespaceCompressor
                                          keep_ssi_comments: false,
                                          minify_css: true,
                                          minify_doctype: true,
-                                         minify_js: true,
+                                         minify_js: false,
                                          preserve_brace_template_syntax: false,
                                          preserve_chevron_percent_template_syntax: false,
                                          remove_bangs: true,
@@ -153,6 +153,13 @@ class WhitespaceCompressor
     doc.to_html
   rescue StandardError => e
     Rails.logger.warn "WhitespaceCompressor: Failed srcdoc pass: #{e.class}: #{e.message}" if defined?(Rails)
+    html
+  end
+
+  def safe_minify_html(html, config)
+    minify_html(html, config)
+  rescue Exception => e
+    Rails.logger.warn "WhitespaceCompressor: Failed HTML minify: #{e.class}: #{e.message}" if defined?(Rails)
     html
   end
 end
