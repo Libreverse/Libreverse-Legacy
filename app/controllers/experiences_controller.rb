@@ -71,7 +71,7 @@ class ExperiencesController < ApplicationController
       redirect_to display_experience_path(@experience), notice: "Experience created successfully."
     else
       @experiences = Experience.all.order(created_at: :desc)
-      Rails.logger.error "EXPERIENCE ERRORS: #{@experience.errors.full_messages.inspect}"
+      Rails.logger.warn "EXPERIENCE ERRORS: #{@experience.errors.full_messages.inspect}"
       render :index, status: :unprocessable_entity
     end
   end
@@ -89,7 +89,7 @@ class ExperiencesController < ApplicationController
     if @experience.update(attrs)
       redirect_to display_experience_path(@experience), notice: "Experience was successfully updated."
     else
-      Rails.logger.error "EXPERIENCE ERRORS: #{@experience.errors.full_messages.inspect}"
+      Rails.logger.warn "EXPERIENCE ERRORS: #{@experience.errors.full_messages.inspect}"
       render :edit, status: :unprocessable_entity
     end
   end

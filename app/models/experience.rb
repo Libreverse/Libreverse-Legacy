@@ -33,6 +33,7 @@ class Experience < ApplicationRecord
   validates :offline_available, inclusion: { in: [ true, false ] }
   validates :html_file, presence: true,
                         content_type: "text/html",
+                        size: { less_than: 5.megabytes, message: "must be less than 5MB" },
                         filename: {
                           with: /\A[\w.-]+\z/,
                           message: "only letters, numbers, underscores, dashes and periods are allowed in filenames"

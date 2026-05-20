@@ -85,16 +85,26 @@ Thredded.avatar_url = lambda { |user|
     temp_png.write(img.to_blob)
     temp_png.rewind
 
-    # Process with ImageProcessing to convert to AVIF
+    # Process with ImageProcessing to convert to AVIF, falling back to WebP
     require "image_processing"
-    processed = ImageProcessing::MiniMagick
-                .source(temp_png.path)
-                .resize_to_limit(64, 64) # Keep original size or adjust as needed
-                .convert("avif")
-                .call
+    format = "avif"
+    begin
+      processed = ImageProcessing::MiniMagick
+                  .source(temp_png.path)
+                  .resize_to_limit(64, 64)
+                  .convert(format)
+                  .call
+    rescue StandardError
+      format = "webp"
+      processed = ImageProcessing::MiniMagick
+                  .source(temp_png.path)
+                  .resize_to_limit(64, 64)
+                  .convert(format)
+                  .call
+    end
 
-    # Read the processed AVIF file
-    avif_data = File.read(processed.path)
+    # Read the processed file
+    image_data = File.read(processed.path)
 
     # Clean up temp files
     temp_png.close
@@ -104,8 +114,8 @@ Thredded.avatar_url = lambda { |user|
 
     # Encode to data URL
     require "base64"
-    data = Base64.strict_encode64(avif_data)
-    "data:image/avif;base64,#{data}"
+    data = Base64.strict_encode64(image_data)
+    "data:image/#{format};base64,#{data}"
   end
 }
 

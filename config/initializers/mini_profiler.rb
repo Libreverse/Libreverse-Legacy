@@ -24,7 +24,7 @@ if Rails.env.development? || Rails.env.production?
   # Non-admin users must still explicitly enable it via Admin::ProfilingController
   # which sets a short-lived session flag (TTL) to avoid accidental exposure.
   if Rails.env.production?
-    Rack::MiniProfiler.config.authorization_mode = :whitelist
+    Rack::MiniProfiler.config.authorization_mode = :allow_authorized
     Rack::MiniProfiler.config.pre_authorize_cb = proc do |env|
       sess = env["rack.session"]
       # First, honor an explicit force-disabled override (admin can temporarily turn it off)

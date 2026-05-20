@@ -130,6 +130,8 @@ class Account < ApplicationRecord
         Rails.logger.error "Failed to log moderation violation: #{e.message}"
       end
 
+      public
+
       # ==> Federated Username Display Methods (matching Sequel model)
 
       # Returns the full federated identifier (@username@instance or @username@local)

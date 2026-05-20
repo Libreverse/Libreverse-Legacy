@@ -34,37 +34,34 @@ class EmojiReplacer
   status, headers, body = @app.call(env)
 
     if headers["Content-Type"]&.include?("text/html")
+      begin
   # Assemble full HTML to process once and allow caching
   chunks = []
   body.each { |part| chunks << part.to_s }
-      original_html = chunks.join
-      body.close if body.respond_to?(:close)
+        original_html = chunks.join
+        body.close if body.respond_to?(:close)
 
-      # Cache the processed HTML to avoid repeated work on identical responses
-      cache_key = "emoji_html:#{::Digest::SHA1.hexdigest(original_html)}"
-      processed_html = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
-        if @exclude_selectors.any? && original_html.include?("<html")
-          process_with_nokogiri(original_html)
-        else
-          replace_emojis(original_html)
+        # Cache the processed HTML to avoid repeated work on identical responses
+        cache_key = "emoji_html:#{::Digest::SHA1.hexdigest(original_html)}"
+        processed_html = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
+          if @exclude_selectors.any? && original_html.include?("<html")
+            process_with_nokogiri(original_html)
+          else
+            replace_emojis(original_html)
+          end
         end
-      end
 
-      # Update the body and Content-Length
-      body = [ processed_html ]
-      headers["Content-Length"] = processed_html.bytesize.to_s
+        # Update the body and Content-Length
+        body = [ processed_html ]
+        headers["Content-Length"] = processed_html.bytesize.to_s
+      rescue StandardError => e
+        Rails.logger.error "EmojiReplacer: Error processing request: #{e.message}"
+        Rails.logger.error e.backtrace.join("\n")
+      end
     end
 
     # Return the modified response
     [ status, headers, body ]
-  rescue StandardError => e
-    Rails.logger.error "EmojiReplacer: Error processing request: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-    safe_status = defined?(status) && status.to_i.positive? ? status.to_i : 500
-    safe_headers = headers.is_a?(Hash) ? headers : {}
-    safe_headers["Content-Type"] ||= "text/plain"
-    safe_body = body.respond_to?(:each) && body ? body : [ "Internal Server Error" ]
-    [ safe_status, safe_headers, safe_body ]
   end
 
   private
@@ -89,10 +86,18 @@ class EmojiReplacer
     false
   end
 
-  def process_with_nokogiri(html)
+  MAX_RESPONSE_BYTES = 500_000
+
+def process_with_nokogiri(html)
     # Prevent processing of obviously invalid HTML
     if html.blank?
       Rails.logger.warn "EmojiReplacer: Skipping processing of invalid HTML"
+      return html
+    end
+
+    # Skip large responses to prevent timeouts
+    if html.bytesize > MAX_RESPONSE_BYTES
+      Rails.logger.info "EmojiReplacer: Skipping large response (#{html.bytesize} bytes)"
       return html
     end
 

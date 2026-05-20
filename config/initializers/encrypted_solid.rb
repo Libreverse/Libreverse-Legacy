@@ -14,11 +14,15 @@ module EncryptionHelper
       return false
     end
 
-    return false unless model_class.table_exists?
+    begin
+      return false unless model_class.table_exists?
+    rescue ActiveRecord::StatementInvalid, ActiveRecord::ConnectionNotEstablished, SQLite3::BusyException
+      return false
+    end
 
     begin
       model_class.columns_hash.key?(column_name.to_s)
-    rescue ActiveRecord::StatementInvalid
+    rescue ActiveRecord::StatementInvalid, ActiveRecord::ConnectionNotEstablished, SQLite3::BusyException
       false
     end
   end
