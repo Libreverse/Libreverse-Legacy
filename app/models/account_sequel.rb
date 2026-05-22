@@ -4,7 +4,13 @@
 require "sequel/model"
 require_relative "../services/moderation_service"
 
+# Stub ensures Zeitwerk's constant-naming contract is satisfied even when the
+# Sequel connection is unavailable (e.g. during test boot before DB setup).
+class AccountSequel; end
+
 begin
+  # Redefine as a full Sequel::Model once the connection is available.
+  Object.send(:remove_const, :AccountSequel)
   class AccountSequel < Sequel::Model(:accounts)
     plugin :timestamps, update_on_create: true
     plugin :validation_helpers

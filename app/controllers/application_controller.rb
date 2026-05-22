@@ -43,7 +43,7 @@ class ApplicationController < ActionController::Base
     account_id = session[:account_id] || request.env["rack.session"]&.[](:account_id)
     return nil unless account_id
 
-    account = Account.fetch(account_id)
+    account = Account.find(account_id)
 
     unless account
       # Account ID in session doesn't exist in DB - invalid session
