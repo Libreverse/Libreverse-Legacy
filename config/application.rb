@@ -9,10 +9,11 @@ Bundler.require(*Rails.groups)
 require "freezolite"
 Freezolite.experimental_freeze_constants = true
 Freezolite.setup(
-  patterns: [ "**/*.rb" ],
+  patterns: [ File.join(__dir__, "..", "**", "*.rb") ],
   exclude_patterns: [
-    "config/initializers/routing_patch.rb",
-    "**/gems/**"
+    File.join(__dir__, "initializers", "routing_patch.rb"),
+    File.join(__dir__, "..", "vendor", "**"),
+    File.join(Gem.dir, "**")
   ]
 )
 
