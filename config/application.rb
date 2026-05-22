@@ -124,6 +124,14 @@ module LibreverseInstance
       check_cycle: 16     # check every 16 requests (default is fine)
     )
 
+    middleware.insert_before(
+      Rack::Runtime,
+      WorkerKiller::Middleware::RequestsLimiter,
+      killer: killer,
+      min: 3072,  # kill after between 3072–4096 requests (randomised to avoid thundering herd)
+      max: 4096
+    )
+
     # Add this to make prod healthcheck pass correctly
     config.hosts << "localhost:3000"
 
