@@ -444,6 +444,7 @@ GEM
       net-smtp
     marcel (1.1.0)
     matrix (0.4.3)
+    memo_wise (1.13.0)
     mimemagic (0.4.3)
       nokogiri (~> 1)
       rake
@@ -1070,6 +1071,7 @@ DEPENDENCIES
   kaminari-i18n
   listen
   lockbox
+  memo_wise
   minify_html (= 0.16.4)
   mocha
   mysql2

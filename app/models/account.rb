@@ -2,6 +2,7 @@ require_relative "../services/moderation_service"
 
 # ActiveRecord primary model (must always be defined for Zeitwerk autoloading)
 class Account < ApplicationRecord
+      prepend MemoWise
       has_many :account_roles, dependent: :destroy
       has_many :roles, through: :account_roles
       rolify
@@ -135,7 +136,7 @@ class Account < ApplicationRecord
       # ==> Federated Username Display Methods (matching Sequel model)
 
       # Returns the full federated identifier (@username@instance or @username@local)
-      def federated_identifier
+      memo_wise def federated_identifier
         if federated_id.present?
           # Already has a federated ID like "username@remote.instance"
           "@#{federated_id}"
@@ -152,7 +153,7 @@ class Account < ApplicationRecord
       end
 
       # Returns the instance domain part
-      def instance_domain
+      memo_wise def instance_domain
         if federated_id.present?
           # Extract domain from federated_id (format: username@domain)
           federated_id.split("@").last

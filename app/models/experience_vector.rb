@@ -1,4 +1,6 @@
 class ExperienceVector < ApplicationRecord
+  prepend MemoWise
+
   belongs_to :experience
 
   validates :vector_data, presence: true
@@ -10,7 +12,7 @@ class ExperienceVector < ApplicationRecord
   serialize :vector_data, type: Array, coder: JSON
 
   # Calculate cosine similarity between this vector and another
-  def cosine_similarity(other_vector)
+  memo_wise def cosine_similarity(other_vector)
     return 0.0 if other_vector.blank?
 
     vector_a = vector_data.is_a?(Array) ? vector_data : JSON.parse(vector_data)
@@ -27,7 +29,7 @@ class ExperienceVector < ApplicationRecord
   end
 
   # Check if the vector needs regeneration
-  def needs_regeneration?(experience)
+  memo_wise def needs_regeneration?(experience)
     current_hash = self.class.generate_content_hash(
       experience.title,
       experience.description,

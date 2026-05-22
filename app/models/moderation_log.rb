@@ -1,4 +1,5 @@
 class ModerationLog < ApplicationRecord
+  prepend MemoWise
   include GraphqlRails::Model
 
   graphql do |c|
@@ -44,7 +45,7 @@ rescue ActiveRecord::RecordInvalid => e
     raise
 end
 
-def violations
+memo_wise def violations
     return [] if violations_data.blank?
     return [] if violations_data.length > 1.megabyte
 

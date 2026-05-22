@@ -1,4 +1,5 @@
 class IndexedContent < ApplicationRecord
+  prepend MemoWise
   # Associations
   has_one :indexed_content_vector, dependent: :destroy
 
@@ -39,11 +40,11 @@ class IndexedContent < ApplicationRecord
     last_indexed_at.nil? || last_indexed_at < 24.hours.ago
   end
 
-  def coordinates_hash
+  memo_wise def coordinates_hash
     coordinates.is_a?(Hash) ? coordinates : {}
   end
 
-  def metadata_hash
+  memo_wise def metadata_hash
     metadata.is_a?(Hash) ? metadata : {}
   end
 
