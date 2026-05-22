@@ -30,7 +30,7 @@ class ExperienceVector < ApplicationRecord
   end
 
   # Check if the vector needs regeneration
-  memo_wise def needs_regeneration?(experience)
+  def needs_regeneration?(experience)
     current_hash = self.class.generate_content_hash(
       experience.title,
       experience.description,
