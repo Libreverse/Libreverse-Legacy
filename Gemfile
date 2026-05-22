@@ -32,6 +32,7 @@ gem "freezolite"
 gem "friendly_id"
 gem "gemoji"
 gem "goldiloader"
+gem "oj", "= 3.16.17"
 gem "google_robotstxt_parser", path: "vendor/gems/google_robotstxt_parser"
 gem "second_level_cache", "~> 2.7", path: "vendor/gems/second_level_cache"
 gem "graphql_rails"
@@ -143,3 +144,5 @@ group :test do
   gem "mocha"
   gem "mysql2"
 end
+
+
