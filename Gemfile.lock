@@ -10,12 +10,6 @@ PATH
       activerecord (>= 6.0)
       activesupport (>= 6.0)
 
-PATH
-  remote: vendor/gems/smart_assets
-  specs:
-    smart_assets (1.2.0)
-      rails (>= 6.1)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -1133,7 +1127,6 @@ DEPENDENCIES
   sequel-activerecord_connection
   shakapacker
   sitemap_generator
-  smart_assets!
   snappy
   solid_cable
   solid_cache
