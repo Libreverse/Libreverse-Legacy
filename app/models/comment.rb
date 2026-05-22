@@ -1,12 +1,12 @@
 class Comment < ApplicationRecord
-  belongs_to :thread, class_name: "CommentThread", foreign_key: :comment_thread_id, counter_cache: true
+  belongs_to :thread, class_name: "CommentThread", foreign_key: :comment_thread_id, counter_cache: true, inverse_of: :comments
   begin
     belongs_to :account, class_name: "Account", optional: false, inverse_of: false
   rescue StandardError
     nil
   end
   belongs_to :parent, class_name: "Comment", optional: true
-  has_many :children, class_name: "Comment", foreign_key: :parent_id, dependent: :destroy
+  has_many :children, class_name: "Comment", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent
   has_many :likes, class_name: "CommentLike", dependent: :destroy
 
   scope :root, -> { where(parent_id: nil) }

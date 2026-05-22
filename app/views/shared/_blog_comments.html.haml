@@ -1,12 +1,11 @@
--# Blog comments thread. Expects an instance variable representing the commontable page.
--# Tries @cms_page then @page.
+-# haml-lint:disable InstanceVariables -- Blog comments thread. Expects an instance variable representing the commontable page. Tries @cms_page then @page.
 - if defined?(@cms_page) && @cms_page
-	#blog-comments
-		%h2.blog-comments__heading Comments
-		= render_comment_thread(@cms_page)
+  .blog-comments
+    %h2.blog-comments__heading Comments
+    = render_comment_thread(@cms_page)
 - elsif defined?(@page) && @page
-	#blog-comments
-		%h2.blog-comments__heading Comments
-		= render_comment_thread(@page)
+  .blog-comments
+    %h2.blog-comments__heading Comments
+    = render_comment_thread(@page)
 - else
-	- raise 'BlogCommentsPartial: No @cms_page or @page instance variable present when rendering shared/blog_comments partial'
+  - raise 'BlogCommentsPartial: No @cms_page or @page instance variable present when rendering shared/blog_comments partial'

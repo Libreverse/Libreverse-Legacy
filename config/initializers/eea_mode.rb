@@ -123,4 +123,3 @@ EEAMode.verify_compliance if Rails.env.production?
 ActiveSupport.on_load(:action_controller_base) do
   include EEAMode::ConsentEnforcer
 end
-

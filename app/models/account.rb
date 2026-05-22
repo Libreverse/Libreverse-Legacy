@@ -130,7 +130,7 @@ class Account < ApplicationRecord
         Rails.logger.error "Failed to log moderation violation: #{e.message}"
       end
 
-      public
+  public
 
       # ==> Federated Username Display Methods (matching Sequel model)
 
@@ -171,8 +171,6 @@ class Account < ApplicationRecord
       def local?
         !federated?
       end
-
-  public # Ensure subsequent Thredded permission methods are public
 
       # ==> Thredded Permission Methods
       # These methods are required by Thredded for user permissions

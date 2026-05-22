@@ -69,6 +69,9 @@ WORKDIR /home/app/webapp
 ## Copy Gemfile and Gemfile.lock first for efficient caching
 COPY Gemfile Gemfile.lock ./
 
+## Copy bundler plugins (required for bundle install)
+COPY plugins/ plugins/
+
 ## Copy .gitmodules and initialize submodules, then copy vendored gem
 COPY .gitmodules ./
 COPY vendor/gems/google_robotstxt_parser ./vendor/gems/google_robotstxt_parser

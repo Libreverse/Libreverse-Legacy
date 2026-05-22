@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version = '1.0.0'
   s.summary = 'Enforces minimum gem age for security'
   s.description = 'Bundler plugin that blocks install if gems are newer than 7 days'
-  s.authors = ['Security']
-  s.files = ['plugins.rb', 'lib/bundler-age_gate.rb']
-  s.require_paths = ['lib']
+  s.authors = [ 'Security' ]
+  s.files = [ 'plugins.rb', 'lib/bundler-age_gate.rb' ]
+  s.require_paths = [ 'lib' ]
 end

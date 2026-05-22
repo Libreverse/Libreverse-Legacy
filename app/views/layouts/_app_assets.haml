@@ -6,6 +6,6 @@
 = vite_client_tag data: {turbo_track: "reload"}
 = vite_javascript_tag "~/javascript/application.js", data: {turbo_track: "reload"}
 - if Rails.env.production?
-    = inline_vite_stylesheet "~/javascript/application.js"
+  = inline_vite_stylesheet "~/javascript/application.js"
 - else
-    = vite_stylesheet_tag "~/stylesheets/application.scss", data: {turbo_track: "reload"}
+  = vite_stylesheet_tag "~/stylesheets/application.scss", data: {turbo_track: "reload"}

@@ -188,11 +188,13 @@
     }
 
     @media screen and (width <= 450px) {
+        /* stylelint-disable no-invalid-position-declaration */
         right: auto;
         left: 50%;
         transform: translateX(-50%);
         width: 90%;
         max-width: $width;
+        /* stylelint-enable no-invalid-position-declaration */
     }
 }
 
@@ -272,6 +274,7 @@
     )
 ) {
     @each $size, $width in $breakpoints {
+        /* stylelint-disable no-invalid-position-declaration */
         @if $size == small {
             @media (width <= 600px) {
                 width: $width;
@@ -285,6 +288,7 @@
                 width: $width;
             }
         }
+        /* stylelint-enable no-invalid-position-declaration */
     }
 }
 

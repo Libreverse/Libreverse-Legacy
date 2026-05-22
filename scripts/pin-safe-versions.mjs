@@ -11,18 +11,18 @@ const MIN_AGE_DAYS = 7;
 const MIN_AGE_MS = MIN_AGE_DAYS * 24 * 60 * 60 * 1000;
 const CUTOFF_DATE = new Date(Date.now() - MIN_AGE_MS);
 
-const CYAN = '\x1b[36m';
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const RED = '\x1b[31m';
-const RESET = '\x1b[0m';
+const CYAN = '\u001B[36m';
+const GREEN = '\u001B[32m';
+const YELLOW = '\u001B[33m';
+const RED = '\u001B[31m';
+const RESET = '\u001B[0m';
 
 console.log(`${CYAN}📌 PINNING TO SAFE VERSIONS${RESET}`);
 console.log(`   Cutoff: ${CUTOFF_DATE.toISOString().split('T')[0]}\n`);
 
 // Read current package.json
-const pkgPath = `${ROOT}/package.json`;
-const pkg = JSON.parse(await Bun.file(pkgPath).text());
+const packagePath = `${ROOT}/package.json`;
+const package_ = JSON.parse(await Bun.file(packagePath).text());
 
 async function findSafeVersion(name, currentSpec) {
   try {
@@ -41,22 +41,20 @@ async function findSafeVersion(name, currentSpec) {
     for (const [version, timestamp] of Object.entries(timeData)) {
       if (version === 'created' || version === 'modified') continue;
       const publishDate = new Date(timestamp);
-      if (publishDate < CUTOFF_DATE) {
-        if (!safeDate || publishDate > safeDate) {
+      if (publishDate < CUTOFF_DATE && (!safeDate || publishDate > safeDate)) {
           safeDate = publishDate;
           safeVersion = version;
         }
-      }
     }
 
     return safeVersion ? { version: safeVersion, date: safeDate } : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
 async function processSection(sectionName) {
-  const section = pkg[sectionName];
+  const section = package_[sectionName];
   if (!section) return 0;
 
   let updated = 0;
@@ -98,8 +96,8 @@ async function processSection(sectionName) {
 
 async function main() {
   const depUpdates = await processSection('dependencies');
-  const devDepUpdates = await processSection('devDependencies');
-  const total = depUpdates + devDepUpdates;
+  const developmentDepUpdates = await processSection('devDependencies');
+  const total = depUpdates + developmentDepUpdates;
 
   if (total === 0) {
     console.log(`\n${GREEN}All versions are already safe.${RESET}\n`);
@@ -107,7 +105,7 @@ async function main() {
   }
 
   // Write updated package.json
-  await Bun.write(pkgPath, JSON.stringify(pkg, null, 4) + '\n');
+  await Bun.write(packagePath, JSON.stringify(package_, null, 4) + '\n');
 
   console.log(`\n${CYAN}Pinned ${total} packages to exact safe versions${RESET}`);
   console.log(`\n${YELLOW}Next steps:${RESET}`);
@@ -116,7 +114,7 @@ async function main() {
   console.log(`   3. Verify: bun scripts/bun-age-gate.mjs\n`);
 }
 
-main().catch(err => {
-  console.error(`${RED}Error: ${err.message}${RESET}`);
+main().catch(error => {
+  console.error(`${RED}Error: ${error.message}${RESET}`);
   process.exit(1);
 });

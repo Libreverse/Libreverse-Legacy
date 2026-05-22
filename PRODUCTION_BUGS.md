@@ -9,7 +9,8 @@ Generated from analysis of production logs (`b8s0o8o0g084ss4s84skg080-1912434504
 **Severity:** Critical
 
 **Evidence:**
-```
+
+```text
 thread '<unnamed>' panicked at .../minify-js/src/minify/pass1.rs:331:13:
 assertion failed: cons_expr.returns && alt_expr.returns
 lib/middleware/whitespace_compressor.rb:132:in 'Kernel#minify_html'
@@ -18,11 +19,13 @@ lib/middleware/whitespace_compressor.rb:132:in 'Kernel#minify_html'
 **Root cause:** `minify_srcdoc_iframes_with_nokogiri` called `minify_html` with `minify_js: true` on untrusted iframe `srcdoc` content. The Rust JS minifier panicked on certain JS expressions.
 
 **Fix applied:**
+
 - Replaced all direct `minify_html` calls with `safe_minify_html`, which rescues exceptions and returns original HTML.
 - Disabled JS minification for `srcdoc` content (`minify_js: false`).
 - Added regression tests in `test/lib/whitespace_compressor_test.rb`.
 
 **Files changed:**
+
 - `lib/middleware/whitespace_compressor.rb`
 - `test/lib/whitespace_compressor_test.rb`
 
@@ -33,12 +36,14 @@ lib/middleware/whitespace_compressor.rb:132:in 'Kernel#minify_html'
 **Severity:** Very High
 
 **Evidence:**
-```
+
+```text
 ActionView::Template::Error - private method 'federated_identifier' called for an instance of Account
 app/views/dashboard/index.haml:46
 ```
 
 **Affected code:**
+
 ```haml
 app/views/dashboard/index.haml:46
 \#{@account.federated_identifier}
@@ -52,6 +57,7 @@ app/views/dashboard/index.haml:62
 **Likely cause:** `Account#federated_identifier` exists but is private (or provided by a concern as a private helper). Views cannot call private methods directly.
 
 **Fix options:**
+
 1. Expose a public presenter/helper method for display.
 2. Make `federated_identifier` public on `Account` if it is intended to be displayed.
 3. Use a defensive fallback (username, email, or ID) when no public federated identifier is available.
@@ -63,7 +69,8 @@ app/views/dashboard/index.haml:62
 **Severity:** Very High
 
 **Evidence:**
-```
+
+```text
 ActiveRecord::StatementInvalid - Trilogy::ProtocolError:
 8025: entry too large, the max entry size is 6291456, the size of data is 6823833
 ```
@@ -71,11 +78,13 @@ ActiveRecord::StatementInvalid - Trilogy::ProtocolError:
 **Impact:** Real request failure. The DB rejected a payload/query result around `6.8MB`, above the configured max entry size of `6MB`.
 
 **Likely causes:**
+
 - Large experience HTML/blob/content being stored directly in a row.
 - Large serialized/cache/encrypted payload.
 - A query trying to insert/update too much data in one entry.
 
 **Recommended investigation:**
+
 - Find the request path around `2026-05-04 21:07:54`.
 - Inspect experience/content columns for large HTML fields.
 - Add app-level size validation before DB write.
@@ -89,7 +98,8 @@ ActiveRecord::StatementInvalid - Trilogy::ProtocolError:
 **Severity:** High
 
 **Evidence:**
-```
+
+```text
 SQLite3::BusyException: database is locked
 config/initializers/encrypted_solid.rb:18
 config/initializers/encrypted_solid.rb:30
@@ -100,12 +110,14 @@ config/initializers/encrypted_solid.rb:30
 **Likely cause:** `config/initializers/encrypted_solid.rb` queries table/column existence during initialization while SQLite/Solid databases are locked or being configured.
 
 **Recommended fix:**
+
 - Avoid DB schema introspection during app initialization unless wrapped defensively.
 - Rescue `SQLite3::BusyException`, `ActiveRecord::StatementInvalid`, and connection errors.
 - Defer encryption setup until after boot if possible.
 - Ensure SQLite busy timeout / WAL mode is configured before initializers query the DB.
 
 **Files to inspect:**
+
 - `config/initializers/encrypted_solid.rb`
 
 ---
@@ -115,12 +127,14 @@ config/initializers/encrypted_solid.rb:30
 **Severity:** Medium-High
 
 **Evidence:**
-```
+
+```text
 EmojiReplacer: Processing timeout
 EmojiReplacer: Error processing request: ...
 ```
 
 **Code location:**
+
 ```ruby
 lib/middleware/emoji_replacer.rb:130
 ```
@@ -130,6 +144,7 @@ lib/middleware/emoji_replacer.rb:130
 **Likely cause:** Large HTML responses, expensive Nokogiri parsing, or repeated document traversal.
 
 **Recommended fix:**
+
 - Skip emoji replacement for large responses above a byte threshold.
 - Cache processed output by digest, similar to `WhitespaceCompressor`.
 - Ensure the middleware does not log upstream app exceptions as its own processing failure.
@@ -142,11 +157,13 @@ lib/middleware/emoji_replacer.rb:130
 **Severity:** Medium
 
 **Evidence:**
-```
+
+```text
 convert-im6.q16: no encode delegate for this image format `AVIF'
 ```
 
 **Likely code location:**
+
 ```ruby
 config/initializers/thredded.rb:88-94
 .convert("avif")
@@ -157,6 +174,7 @@ config/initializers/thredded.rb:88-94
 **Cause:** Production ImageMagick lacks AVIF encoder support.
 
 **Fix options:**
+
 1. Install ImageMagick with AVIF/libheif support.
 2. Change generated format from `avif` to `webp` or `png`.
 3. Add fallback: try AVIF, rescue, then WebP/PNG.
@@ -168,7 +186,8 @@ config/initializers/thredded.rb:88-94
 **Severity:** Medium
 
 **Evidence:**
-```
+
+```text
 unsupported configuration 'BOUNCER_LOG_LEVEL'
 unsupported configuration 'HTTP_TIMEOUT'
 error loading captcha plugin: no recaptcha site key provided
@@ -178,6 +197,7 @@ BAN_TEMPLATE_PATH and REDIRECT_LOCATION variable are empty, will return HTTP 403
 **Impact:** Security layer still initializes, but configuration is partially invalid or degraded.
 
 **Recommended fix:**
+
 - Remove unsupported `BOUNCER_LOG_LEVEL` and `HTTP_TIMEOUT` from the Nginx bouncer config for the installed version.
 - Disable captcha plugin or provide Recaptcha keys.
 - Configure `BAN_TEMPLATE_PATH` or `REDIRECT_LOCATION` if branded ban pages are preferred over bare `403`.
@@ -189,11 +209,13 @@ BAN_TEMPLATE_PATH and REDIRECT_LOCATION variable are empty, will return HTTP 403
 **Severity:** Low-Medium
 
 **Evidence:**
-```
+
+```text
 [DEPRECATION] `:whitelist` authorization mode is deprecated. Please use `:allow_authorized` instead.
 ```
 
 **Relevant file:**
+
 - `config/initializers/thredded.rb`
 
 **Impact:** Not a crash, but noisy logs and future compatibility risk.
@@ -208,19 +230,22 @@ Search current Thredded config for `:whitelist` and replace with `:allow_authori
 **Severity:** High
 
 **Evidence:**
-```
+
+```text
 Unknown ruby string: ruby-3.4.
 Required ruby-3.4 is not installed.
 ```
 
 But stack traces show:
-```
+
+```text
 /usr/local/rvm/gems/ruby-3.4.8
 /usr/local/rvm/rubies/ruby-3.4.8
 ```
 
 **Repo declares:**
-```
+
+```text
 ruby-3.3.7
 ```
 
@@ -235,7 +260,8 @@ ruby-3.3.7
 **Severity:** Medium
 
 **Evidence:**
-```
+
+```text
 EXPERIENCE ERRORS: ["Title contains inappropriate content and cannot be saved", ...]
 ```
 
@@ -245,6 +271,7 @@ EXPERIENCE ERRORS: ["Title contains inappropriate content and cannot be saved", 
 Downgrade expected moderation/validation failures from `error` to `info` or `warn`. Keep true exceptions at `error`.
 
 **Files to inspect:**
+
 - `app/models/experience.rb`
 - Experience create/update controller paths
 

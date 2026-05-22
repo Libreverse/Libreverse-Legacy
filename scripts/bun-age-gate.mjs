@@ -14,10 +14,10 @@ const MIN_AGE_DAYS = 7;
 const MIN_AGE_MS = MIN_AGE_DAYS * 24 * 60 * 60 * 1000;
 const CUTOFF_DATE = new Date(Date.now() - MIN_AGE_MS);
 
-const RED = '\x1b[31m';
-const YELLOW = '\x1b[33m';
-const GREEN = '\x1b[32m';
-const RESET = '\x1b[0m';
+const RED = '\u001B[31m';
+const YELLOW = '\u001B[33m';
+const GREEN = '\u001B[32m';
+const RESET = '\u001B[0m';
 
 console.log(`\n${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}`);
 console.log(`${GREEN}  🔒 BUN AGE GATE - SECURITY CHECK${RESET}`);
@@ -34,7 +34,7 @@ async function getLockedPackages() {
     const packages = [];
 
     // Find the workspaces section
-    const workspacesMatch = lockfile.match(/"workspaces":\s*\{[\s\S]*?"":\s*\{([\s\S]*?)\n  \},/);
+    const workspacesMatch = lockfile.match(/"workspaces":\s*\{[\s\S]*?"":\s*\{([\s\S]*?)\n {2}\},/);
     if (!workspacesMatch) {
       console.error(`${YELLOW}⚠️  Could not find workspaces in bun.lock${RESET}`);
       return [];
@@ -43,8 +43,8 @@ async function getLockedPackages() {
     const workspaceContent = workspacesMatch[1];
 
     // Extract dependencies section
-    const depsMatch = workspaceContent.match(/"dependencies":\s*\{([\s\S]*?)\n      \},/);
-    const devDepsMatch = workspaceContent.match(/"devDependencies":\s*\{([\s\S]*?)\n      \},/);
+    const depsMatch = workspaceContent.match(/"dependencies":\s*\{([\s\S]*?)\n {6}\},/);
+    const developmentDepsMatch = workspaceContent.match(/"devDependencies":\s*\{([\s\S]*?)\n {6}\},/);
 
     // Parse dependency entries
     function parseDeps(content) {
@@ -63,11 +63,11 @@ async function getLockedPackages() {
     }
 
     parseDeps(depsMatch?.[1]);
-    parseDeps(devDepsMatch?.[1]);
+    parseDeps(developmentDepsMatch?.[1]);
 
     return packages;
-  } catch (e) {
-    console.error(`${YELLOW}⚠️  Could not parse bun.lock: ${e.message}${RESET}`);
+  } catch (error) {
+    console.error(`${YELLOW}⚠️  Could not parse bun.lock: ${error.message}${RESET}`);
     return [];
   }
 }
@@ -88,7 +88,7 @@ async function checkPackageAge(name, versionSpec) {
         });
         const output = await new Response(proc.stdout).text();
         targetVersion = JSON.parse(output);
-      } catch (e) {
+      } catch {
         // Fall back to cleaned version
       }
     }
@@ -104,7 +104,7 @@ async function checkPackageAge(name, versionSpec) {
     const published = new Date(timeData[targetVersion]);
 
     return { name, version: targetVersion, modified: published, tooNew: published > CUTOFF_DATE };
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -124,8 +124,8 @@ async function validate() {
   const recentPackages = [];
   const batchSize = 5;
 
-  for (let i = 0; i < packages.length; i += batchSize) {
-    const batch = packages.slice(i, i + batchSize);
+  for (let index = 0; index < packages.length; index += batchSize) {
+    const batch = packages.slice(index, index + batchSize);
     const results = await Promise.all(
       batch.map(p => checkPackageAge(p.name, p.versionSpec))
     );
@@ -136,7 +136,7 @@ async function validate() {
       }
     }
 
-    process.stdout.write(`   ${Math.min(i + batchSize, packages.length)}/${packages.length} checked...\r`);
+    process.stdout.write(`   ${Math.min(index + batchSize, packages.length)}/${packages.length} checked...\r`);
   }
 
   console.log('');
@@ -161,8 +161,8 @@ async function validate() {
   process.exit(0);
 }
 
-validate().catch(err => {
-  console.error(`${RED}❌ Validation error: ${err.message}${RESET}`);
+validate().catch(error => {
+  console.error(`${RED}❌ Validation error: ${error.message}${RESET}`);
   console.error(`   Defaulting to BLOCK for security.\n`);
   process.exit(1);
 });

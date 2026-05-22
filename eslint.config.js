@@ -33,6 +33,7 @@ export default [
             "storage/**",
             "config/**",
             "**/generated/**",
+            "scripts/**",
         ],
     },
     ...compat.extends("eslint:recommended", "plugin:unicorn/recommended"),

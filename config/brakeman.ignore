@@ -1,25 +1,46 @@
 {
   "ignored_warnings": [
     {
-      "warning_type": "Remote Code Execution",
-      "warning_code": 25,
-      "fingerprint": "923a4af26efb1f668ab518160860ba349258bfe68404a67d25a5a5bd468dc1b2",
-      "check_name": "Deserialize",
-      "message": "Use of `Marshal.load` may be dangerous",
-      "file": "config/initializers/solid_cache_snappy.rb",
-      "line": 25,
-      "link": "https://brakemanscanner.org/docs/warning_types/unsafe_deserialization",
-      "code": "Marshal.load((begin\n  Snappy.inflate(payload)\nrescue StandardError\n  payload\nend or payload))",
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "04ce3744ff7e4be3ff47a08c8db7da95a021b7515635990d9f0182eb444df7c7",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/comments/_comment.html.haml",
+      "line": 6,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "::Haml::AttributeBuilder.build_class(true, \"badge pending\", \"badge-#{CommentThread.find_or_create_by!(:commontable => find_commontable).comments.find(params[:id]).moderation_state}\")",
       "render_path": null,
       "location": {
-        "type": "method",
-        "class": "SnappyMarshal",
-        "method": "load"
+        "type": "template",
+        "template": "comments/_comment"
       },
-      "user_input": null,
+      "user_input": "CommentThread.find_or_create_by!(:commontable => find_commontable).comments",
       "confidence": "Weak",
       "cwe_id": [
-        502
+        79
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "e485934eab45db6434df8d6f8d5121ecd45437aca66aefdc151f718cdfaca433",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/admin/comments/index.html.haml",
+      "line": 31,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "::Haml::AttributeBuilder.build_class(true, \"state-#{(Unresolved Model).new.moderation_state}\")",
+      "render_path": null,
+      "location": {
+        "type": "template",
+        "template": "admin/comments/index"
+      },
+      "user_input": "(Unresolved Model).new.moderation_state",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
       ],
       "note": ""
     }

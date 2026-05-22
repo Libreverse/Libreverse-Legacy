@@ -121,6 +121,7 @@ class SitemapController < ApplicationController
   def self.sitemap_mutex
     @sitemap_mutex ||= Mutex.new
   end
+  private_class_method :sitemap_mutex
 
    def generate_dynamic_sitemap(host)
      Rails.logger.info "Generating dynamic sitemap for host: #{host}"

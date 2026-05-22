@@ -6,7 +6,7 @@ ruby "3.3.7"
 
 # Security: Enforce 1-week minimum age for all gems
 # Install with: bundle plugin install bundler-age_gate --path plugins/bundler-age_gate
-plugin 'bundler-age_gate', path: 'plugins/bundler-age_gate'
+plugin "bundler-age_gate", path: "plugins/bundler-age_gate"
 
 gem "active_hashcash"
 gem "activerecord-enhancedsqlite3-adapter"
@@ -20,6 +20,7 @@ gem "cancancan"
 gem "capybara"
 gem "chunky_png"
 gem "comfortable_media_surfer"
+gem "connection_pool", "< 3.0"
 gem "console1984"
 gem "federails"
 gem "federails-moderation"
@@ -57,7 +58,6 @@ gem "rails-controller-testing"
 gem "rails-i18n"
 gem "re2"
 gem "reactionview"
-gem "connection_pool", "< 3.0"
 gem "react_on_rails", "16.0"
 gem "reform"
 gem "rodauth-guest"
@@ -108,9 +108,9 @@ group :development, :test do
   gem "debug"
   gem "dotenv-rails"
   gem "listen"
-  gem 'spring-commands-rubocop'
-  gem 'parallel_tests'
-  gem 'spring-commands-parallel-tests'
+  gem "parallel_tests"
+  gem "spring-commands-parallel-tests"
+  gem "spring-commands-rubocop"
 end
 
 group :development do

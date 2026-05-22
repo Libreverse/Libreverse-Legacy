@@ -7,7 +7,7 @@ puts "Checking constants for shareability..."
 
 app_root = Rails.root.to_s
 
-def check_constants(mod, prefix = "", visited = Set.new, app_root)
+def check_constants(mod, app_root, prefix = "", visited = Set.new)
   return if visited.include?(mod)
 
   visited.add(mod)
@@ -26,7 +26,7 @@ def check_constants(mod, prefix = "", visited = Set.new, app_root)
 
       if value.is_a?(Module)
         # Recurse into modules/classes
-        check_constants(value, full_name, visited, app_root)
+        check_constants(value, app_root, full_name, visited)
       else
         # Check shareability for non-module values
         begin
@@ -41,6 +41,6 @@ def check_constants(mod, prefix = "", visited = Set.new, app_root)
   end
 end
 
-check_constants(Object, "", Set.new, app_root)
+check_constants(Object, app_root, "", Set.new)
 
 puts "Done."

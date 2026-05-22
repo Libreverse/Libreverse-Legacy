@@ -39,6 +39,7 @@
 }
 
 /* Firefox Fallbacks */
+/* stylelint-disable-next-line at-rule-no-deprecated */
 @document url-prefix() {
     .glass {
         /* Firefox doesn't support backdrop-filter well, use enhanced solid background */

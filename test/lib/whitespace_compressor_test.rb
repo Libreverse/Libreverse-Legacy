@@ -8,7 +8,7 @@ class WhitespaceCompressorTest < ActiveSupport::TestCase
     compressor = WhitespaceCompressor.new(app)
 
     compressor.define_singleton_method(:minify_html) do |_html, _config|
-      raise Exception, "native minifier panic"
+      raise StandardError, "native minifier panic"
     end
 
     status, headers, body = compressor.call({})
@@ -30,6 +30,6 @@ class WhitespaceCompressorTest < ActiveSupport::TestCase
     compressor.minify_srcdoc_iframes_with_nokogiri('<html><body><iframe srcdoc="&lt;script&gt;if (a) { return b } else { return c }&lt;/script&gt;"></iframe></body></html>')
 
     assert configs.any?
-    assert configs.all? { |config| config[:minify_js] == false }
+    assert(configs.all? { |config| config[:minify_js] == false })
   end
 end

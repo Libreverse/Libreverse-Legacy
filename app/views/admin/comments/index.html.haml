@@ -2,7 +2,7 @@
 .admin-comments
   %h1 Comment Moderation
   .filters
-    %form{ method: :get, action: admin_comments_path, class: 'filters-form' }
+    %form.filters-form{ method: :get, action: admin_comments_path }
       %input{ type: :text, name: :q, value: @q, placeholder: 'Search body...' }
       %select{ name: :state }
         %option{ value: '' } All States
@@ -11,7 +11,10 @@
       %button{ type: :submit } Filter
   .counts
     - %w[pending rejected approved].each do |st|
-      %span.count-badge{ class: "state-#{st}" }= "#{st.titleize}: #{@counts[st] || 0}"
+      %span.count-badge{ class: "state-#{st}" }
+        = st.titleize
+        = ": "
+        = @counts[st] || 0
   = form_with url: bulk_admin_comments_path, method: :post, class: 'bulk-form' do
     %table.moderation-table
       %thead

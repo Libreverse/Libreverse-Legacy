@@ -129,22 +129,22 @@ class WhitespaceCompressor
 
       begin
         minified_content = safe_minify_html(content, {
-                                         allow_noncompliant_unquoted_attribute_values: true,
-                                         allow_optimal_entities: true,
-                                         allow_removing_spaces_between_attributes: true,
-                                         keep_closing_tags: false,
-                                         keep_comments: false,
-                                         keep_html_and_head_opening_tags: false,
-                                         keep_input_type_text_attr: false,
-                                         keep_ssi_comments: false,
-                                         minify_css: true,
-                                         minify_doctype: true,
-                                         minify_js: false,
-                                         preserve_brace_template_syntax: false,
-                                         preserve_chevron_percent_template_syntax: false,
-                                         remove_bangs: true,
-                                         remove_processing_instructions: true
-                                       })
+                                              allow_noncompliant_unquoted_attribute_values: true,
+                                              allow_optimal_entities: true,
+                                              allow_removing_spaces_between_attributes: true,
+                                              keep_closing_tags: false,
+                                              keep_comments: false,
+                                              keep_html_and_head_opening_tags: false,
+                                              keep_input_type_text_attr: false,
+                                              keep_ssi_comments: false,
+                                              minify_css: true,
+                                              minify_doctype: true,
+                                              minify_js: false,
+                                              preserve_brace_template_syntax: false,
+                                              preserve_chevron_percent_template_syntax: false,
+                                              remove_bangs: true,
+                                              remove_processing_instructions: true
+                                            })
         node["srcdoc"] = minified_content
       rescue StandardError => e
         Rails.logger.warn "WhitespaceCompressor: Failed to minify srcdoc: #{e.message}" if defined?(Rails)
@@ -158,7 +158,7 @@ class WhitespaceCompressor
 
   def safe_minify_html(html, config)
     minify_html(html, config)
-  rescue Exception => e
+  rescue StandardError => e
     Rails.logger.warn "WhitespaceCompressor: Failed HTML minify: #{e.class}: #{e.message}" if defined?(Rails)
     html
   end

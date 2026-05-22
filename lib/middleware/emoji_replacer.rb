@@ -131,17 +131,17 @@ def process_with_nokogiri(html)
 
       doc.to_html
     end
-  rescue Timeout::Error
+rescue Timeout::Error
     Rails.logger.error "EmojiReplacer: Processing timeout"
     html
-  rescue Nokogiri::XML::SyntaxError => e
+rescue Nokogiri::XML::SyntaxError => e
     Rails.logger.error "EmojiReplacer: HTML parsing error: #{e.message}"
     html
-  rescue StandardError => e
+rescue StandardError => e
     Rails.logger.error "EmojiReplacer: Processing error: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     html
-  end
+end
 
   def ensure_utf8(str)
     return str if str.encoding == Encoding::UTF_8

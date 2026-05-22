@@ -12,7 +12,7 @@ require 'date'
 
 MIN_AGE_DAYS = 7
 MIN_AGE_SECONDS = MIN_AGE_DAYS * 24 * 60 * 60
-CUTOFF_DATE = Time.now - MIN_AGE_SECONDS
+CUTOFF_DATE = Time.zone.now - MIN_AGE_SECONDS
 
 RED = "\e[31m"
 YELLOW = "\e[33m"
@@ -36,13 +36,13 @@ def parse_gemfile_lock
   in_specs = false
 
   content.each_line do |line|
-    if line =~ /^GEM$/
+    if /^GEM$/.match?(line)
       in_specs = false
-    elsif line =~ /^  specs:$/
+    elsif /^  specs:$/.match?(line)
       in_specs = true
     elsif in_specs && line =~ /^    ([\w\-_.]+) \(([^)]+)\)$/
-      name = $1
-      version = $2.split(',').first.strip
+      name = Regexp.last_match(1)
+      version = Regexp.last_match(2).split(',').first.strip
       gems[name] = version
     elsif line =~ /^PLATFORMS/ || line =~ /^DEPENDENCIES/
       in_specs = false
@@ -69,10 +69,8 @@ def get_publish_date(name, version)
   if response.code == '200'
     data = JSON.parse(response.body)
     DateTime.parse(data['created_at']).to_time
-  else
-    nil
   end
-rescue => e
+rescue StandardError
   nil
 end
 
@@ -105,7 +103,7 @@ def validate
               name: name,
               version: version,
               published: published,
-              days_ago: ((Time.now - published) / (24 * 60 * 60)).to_i
+              days_ago: ((Time.zone.now - published) / (24 * 60 * 60)).to_i
             }
           end
           print "   #{checked}/#{gems.length} checked...\r"
@@ -115,7 +113,7 @@ def validate
     end
 
     threads.each(&:join)
-    sleep 0.5  # Brief pause between batches to be nice to the API
+    sleep 0.5 # Brief pause between batches to be nice to the API
   end
 
   puts "\n"
@@ -142,7 +140,7 @@ end
 
 begin
   validate
-rescue => e
+rescue StandardError => e
   puts "#{RED}❌ Validation error: #{e.message}#{RESET}"
   puts "   Defaulting to BLOCK for security.\n"
   exit 1
