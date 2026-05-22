@@ -3,6 +3,7 @@ require_relative "../services/moderation_service"
 # ActiveRecord primary model (must always be defined for Zeitwerk autoloading)
 class Account < ApplicationRecord
       prepend MemoWise
+      second_level_cache expires_in: 1.week
       has_many :account_roles, dependent: :destroy
       has_many :roles, through: :account_roles
       rolify

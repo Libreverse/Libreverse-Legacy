@@ -1,5 +1,6 @@
 class ExperienceVector < ApplicationRecord
   prepend MemoWise
+  second_level_cache expires_in: 1.week
 
   belongs_to :experience
 

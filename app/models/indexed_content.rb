@@ -1,5 +1,6 @@
 class IndexedContent < ApplicationRecord
   prepend MemoWise
+  second_level_cache expires_in: 1.week
   # Associations
   has_one :indexed_content_vector, dependent: :destroy
 

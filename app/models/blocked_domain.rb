@@ -1,5 +1,6 @@
 # Model for tracking blocked federation domains
 class BlockedDomain < ApplicationRecord
+  second_level_cache expires_in: 1.week
   before_validation { self.domain = domain&.downcase }
   validates :domain,
             presence: true,

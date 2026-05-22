@@ -1,6 +1,7 @@
 require "active_storage_validations"
 
 class Experience < ApplicationRecord
+  second_level_cache expires_in: 1.week
   extend FriendlyId
   include ActiveStorageValidations::Model
   include GraphqlRails::Model

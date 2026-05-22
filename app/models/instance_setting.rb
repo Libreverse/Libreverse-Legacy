@@ -1,4 +1,5 @@
 class InstanceSetting < ApplicationRecord
+  second_level_cache expires_in: 1.week
   # Encrypt sensitive values
   encrypts :value, deterministic: true, downcase: false
 
@@ -50,9 +51,7 @@ class InstanceSetting < ApplicationRecord
 
   # Get a setting value by key
   def self.get(key)
-    # Fast-path cache: memoize values with a short TTL
-    FunctionCache.instance.cache(:instance_setting_get, key, ttl: 300) do
-      record = find_by(key: key)
+    record = fetch_by_uniq_keys(key: key)
     return nil unless record
 
     value = record.value
@@ -71,7 +70,6 @@ class InstanceSetting < ApplicationRecord
       Rails.logger.warn "[InstanceSetting] Unexpected value type for key '#{key}': #{value.class} - #{value.inspect}"
       value.to_s
     end
-    end
   end
 
   # Set a setting value by key
@@ -83,8 +81,7 @@ class InstanceSetting < ApplicationRecord
     setting.description = description if description.present?
 
     if setting.save
-      # Invalidate cached reads
-      FunctionCache.instance.delete(:instance_setting_get, key)
+      # Invalidate fallback chain cache (second_level_cache auto-expires the record on save)
       FunctionCache.instance.delete(:instance_setting_fallback, key, nil, nil)
       setting.value
     else

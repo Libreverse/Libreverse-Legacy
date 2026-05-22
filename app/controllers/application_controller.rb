@@ -43,9 +43,7 @@ class ApplicationController < ActionController::Base
     account_id = session[:account_id] || request.env["rack.session"]&.[](:account_id)
     return nil unless account_id
 
-    account = FunctionCache.instance.cache(:account_by_id, account_id, ttl: 300) do
-      Account.find(account_id)
-    end
+    account = Account.fetch(account_id)
 
     unless account
       # Account ID in session doesn't exist in DB - invalid session

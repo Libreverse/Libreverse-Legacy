@@ -1,4 +1,5 @@
 class Role < ApplicationRecord
+  second_level_cache expires_in: 1.week
   has_many :account_roles, dependent: :destroy
   has_many :accounts, through: :account_roles
 
