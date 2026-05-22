@@ -3,6 +3,19 @@ PATH
   specs:
     google_robotstxt_parser (0.0.6)
 
+PATH
+  remote: vendor/gems/second_level_cache
+  specs:
+    second_level_cache (2.7.1)
+      activerecord (>= 6.0)
+      activesupport (>= 6.0)
+
+PATH
+  remote: vendor/gems/smart_assets
+  specs:
+    smart_assets (1.2.0)
+      rails (>= 6.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -1113,12 +1126,14 @@ DEPENDENCIES
   rubocop-performance
   rubocop-rails
   rubyzip
+  second_level_cache (~> 2.7)!
   selenium-webdriver
   sentry-rails
   sentry-ruby
   sequel-activerecord_connection
   shakapacker
   sitemap_generator
+  smart_assets!
   snappy
   solid_cable
   solid_cache
