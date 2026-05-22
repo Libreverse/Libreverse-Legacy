@@ -540,6 +540,8 @@ GEM
       rackup (>= 1.0.1)
       rake (>= 12.3.3)
     permessage_deflate (0.1.4)
+    pluck_in_batches (0.3.0)
+      activerecord (>= 6.0)
     pp (0.6.3)
       prettyprint
     premailer (1.27.0)
@@ -1083,6 +1085,7 @@ DEPENDENCIES
   parallel_tests
   passenger (>= 6.0.20)
   permessage_deflate
+  pluck_in_batches
   premailer-rails
   propshaft
   rack-attack
