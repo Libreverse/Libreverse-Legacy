@@ -6,7 +6,7 @@ class Comment < ApplicationRecord
     nil
   end
   belongs_to :parent, class_name: "Comment", optional: true
-  has_many :children, class_name: "Comment", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent
+  has_many :children, class_name: "Comment", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent, fully_load: true
   has_many :likes, class_name: "CommentLike", dependent: :destroy
 
   scope :root, -> { where(parent_id: nil) }
