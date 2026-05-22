@@ -17,6 +17,7 @@ gem "audits1984"
 gem "better_html"
 gem "bootsnap", require: false
 gem "cancancan"
+gem "counter_culture", "~> 3.5"
 gem "capybara"
 gem "chunky_png"
 gem "comfortable_media_surfer"
