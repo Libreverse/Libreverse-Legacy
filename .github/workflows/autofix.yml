@@ -174,7 +174,6 @@ jobs:
               if: always()
               uses: stefanzweifel/git-auto-commit-action@v7
               with:
-                  token: ${{ steps.app-token.outputs.token }}
                   commit_message: "chore(autofix): apply automated format/lint fixes"
                   branch: ${{ github.head_ref || github.ref_name }}
                   commit_user_name: github-actions[bot]
