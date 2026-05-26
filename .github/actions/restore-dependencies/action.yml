@@ -79,9 +79,9 @@ runs:
               if [ ! -d node_modules ] || [ "${{ steps.bun-cache.outputs.cache-hit }}" != "true" ]; then
                 echo "node_modules missing; installing..."
                 if [ "${{ inputs.use-socket-firewall }}" = "true" ] && [ -n "${SOCKET_API_KEY:-}" ] && command -v sfw >/dev/null 2>&1; then
-                  sfw bun install --frozen-lockfile
+                  sfw bun install
                 else
-                  bun install --frozen-lockfile
+                  bun install
                 fi
               fi
 

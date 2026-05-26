@@ -80,7 +80,14 @@ jobs:
           bun scripts/bun-age-gate-delta.mjs
           ruby scripts/gem-age-gate-delta.rb
 
+      - name: Setup Python for Socket CLI
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Socket PR delta scan
+        if: github.event_name == 'pull_request'
         env:
           SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
           SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_API_KEY }}
@@ -92,7 +99,7 @@ jobs:
             exit 0
           fi
           pip install socketsecurity --upgrade
-          PR_NUMBER="${{ github.event.pull_request.number || 0 }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
           for attempt in 1 2 3; do
             if socketcli --target-path "$GITHUB_WORKSPACE" --scm github --pr-number "$PR_NUMBER" \
               --sarif-file socket-results.sarif --config .socketcli.toml; then
@@ -154,7 +161,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always()
+    if: always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -255,7 +262,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always()
+    if: always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -291,7 +298,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always()
+    if: always() && needs.install.result == 'success'
     permissions:
       contents: read
       security-events: write
@@ -317,7 +324,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always()
+    if: always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -340,6 +347,7 @@ jobs:
 
   testing:
     needs: install
+    if: always() && needs.install.result == 'success'
     name: ${{ matrix.test-suite }}
     runs-on: ubuntu-22.04
     permissions:
