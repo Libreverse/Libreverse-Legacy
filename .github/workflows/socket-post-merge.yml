@@ -13,43 +13,52 @@ jobs:
   post-merge-scan:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-22.04
+    env:
+      SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - name: Install Socket CLI
-        if: secrets.SOCKET_API_KEY != ''
-        run: pip install socketsecurity --upgrade
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
 
-      - name: Full scan and compare baseline
-        if: secrets.SOCKET_API_KEY != ''
+      - name: Socket full scan
         id: scan
         env:
-          SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_API_KEY }}
+          SOCKET_SECURITY_API_KEY: ${{ env.SOCKET_API_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${SOCKET_API_KEY:-}" ]; then
+            echo "SOCKET_API_KEY not set; skipping post-merge scan."
+            exit 0
+          fi
+          pip install socketsecurity --upgrade
           socketcli --target-path "$GITHUB_WORKSPACE" --scm api --pr-number 0 \
             --sarif-file socket-full.sarif --config .socketcli.toml
           bun scripts/socket-policy-filter.mjs socket-full.sarif
 
       - name: Update baseline metadata
-        if: success() && secrets.SOCKET_API_KEY != ''
-        run: bun scripts/socket-update-baseline.mjs socket-full.sarif
+        if: success() && steps.scan.outcome == 'success'
+        run: |
+          if [ ! -f socket-full.sarif ]; then exit 0; fi
+          bun scripts/socket-update-baseline.mjs socket-full.sarif
 
       - uses: actions/create-github-app-token@v3
-        if: success() && secrets.SOCKET_API_KEY != ''
+        if: success() && steps.scan.outcome == 'success'
         id: baseline-token
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Commit baseline update
-        if: success() && secrets.SOCKET_API_KEY != ''
+        if: success() && steps.scan.outcome == 'success'
         env:
           GH_TOKEN: ${{ steps.baseline-token.outputs.token }}
         run: |
           set -euo pipefail
+          if [ ! -f .github/socket-baseline.json ]; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .github/socket-baseline.json
@@ -77,4 +86,3 @@ jobs:
           gh issue create --title "dependabot-paused: post-merge Socket regression" \
             --body "Auto-reverted ${{ github.sha }} due to new Socket blockers. See workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}."
           gh label create dependabot-paused --color B60205 --description "Autonomous rolling halted" 2>/dev/null || true
-          gh label edit dependabot-paused --description "Autonomous rolling halted" 2>/dev/null || true

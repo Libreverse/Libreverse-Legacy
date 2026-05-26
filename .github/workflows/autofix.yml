@@ -30,7 +30,7 @@ jobs:
               env:
                   SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
               with:
-                  use-socket-firewall: ${{ secrets.SOCKET_API_KEY != '' && 'true' || 'false' }}
+                  use-socket-firewall: "false"
 
             - name: Determine changed files
               id: changes
