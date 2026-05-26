@@ -4,6 +4,8 @@ Design for **perpetual, review-free** dependency updates on Libreverse-Legacy: D
 
 **Status:** Implemented in repo (phases 1–5). Enable rolling by setting repository variable `AUTODEP_MERGE_ENABLED=true` (and optional `AUTODEP_MAJOR_MERGE_ENABLED=true`). Requires secrets: `SOCKET_API_KEY`, `APP_ID`, `APP_PRIVATE_KEY`, plus existing deploy secrets. Optional: `DEPLOY_HEALTH_URL` (defaults to `https://libreverse-legacy.geor.me/up`; smoke runs after the Cloudflare bypass step).
 
+**TiDB pause (2026):** Serverless TiDB free tier is exhausted; the instance is shut down until credits reset (~June) to avoid accidental spend. Set repository variable `TIDB_INSTANCE_AVAILABLE=false` (default while paused). When `false`, CI skips `rails-test`, and **Build & Deploy** (Quay push, Coolify, smoke, rollback) does not run. Dependency gates and patch/minor auto-merge on PRs can still run. Set `TIDB_INSTANCE_AVAILABLE=true` when the database is back before expecting deploys or smoke to pass.
+
 **Related:** [package-age-gates workflow](.windsurf/workflows/package-age-gates.md), `.github/dependabot.yml`, `.github/workflows/auto-approve.yml`, `.github/workflows/ci.yml`
 
 ---
@@ -299,6 +301,7 @@ Expect **monthly digests** and **rare halt alerts**, not per-PR notifications.
 | `SOCKET_API_KEY` | Firewall + socketcli |
 | `APP_ID` / `APP_PRIVATE_KEY` | GitHub App merge |
 | `QUAY_*`, `COOLIFY_*`, `TIDB_*` | Existing deploy/CI |
+| `TIDB_INSTANCE_AVAILABLE` | Repo variable: `true` = rails-test + deploy/smoke; `false` while TiDB paused |
 
 ---
 

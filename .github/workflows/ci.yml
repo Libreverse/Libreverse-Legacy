@@ -351,7 +351,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-suite: [jest, rails-test]
+        # Omit rails-test while TiDB Serverless is paused (set TIDB_INSTANCE_AVAILABLE=true when back).
+        test-suite: ${{ vars.TIDB_INSTANCE_AVAILABLE == 'true' && fromJSON('["jest","rails-test"]') || fromJSON('["jest"]') }}
     steps:
       - name: Check out code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -407,6 +408,7 @@ jobs:
           done
           echo "All verify jobs passed."
 
+  # Skipped while TiDB Serverless is shut down (free tier cap). Set TIDB_INSTANCE_AVAILABLE=true to resume.
   build-push:
     name: Build & Deploy
     needs: verify
@@ -414,7 +416,7 @@ jobs:
     permissions:
       contents: write
       packages: write
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
+    if: vars.TIDB_INSTANCE_AVAILABLE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
 
     steps:
       - name: Check out code
