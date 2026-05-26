@@ -639,6 +639,10 @@ GEM
       railties (>= 8.0.0, < 9)
     rails_gravatar (1.0.4)
       actionview
+    rails_http_preload (0.3.0)
+      actionpack
+      actionview
+      rails
     railties (8.0.4.1)
       actionpack (= 8.0.4.1)
       activesupport (= 8.0.4.1)
@@ -1106,6 +1110,7 @@ DEPENDENCIES
   rails
   rails-controller-testing
   rails-i18n
+  rails_http_preload (~> 0.3.0)
   re2
   react_on_rails (= 16.0)
   reactionview

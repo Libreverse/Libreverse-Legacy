@@ -146,3 +146,5 @@ group :test do
 end
 
 
+
+gem "rails_http_preload", "~> 0.3.0"
