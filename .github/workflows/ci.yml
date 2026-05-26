@@ -9,7 +9,7 @@ concurrency:
 permissions:
     contents: read
     security-events: write
-    actions: read
+    actions: read # download install-job dependency artifacts
 
 on:
     pull_request:
@@ -140,6 +140,16 @@ jobs:
             ~/.bun
           key: deps-${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
 
+      - name: Upload dependencies for downstream jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-deps-${{ github.run_id }}
+          path: |
+            vendor/bundle
+            node_modules
+          if-no-files-found: error
+          retention-days: 1
+
   formatting:
     needs: install
     name: ${{ matrix.tool }}
@@ -168,13 +178,15 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Prettier
         if: matrix.tool == 'prettier'
         shell: bash
         run: |
           set -e
-          timeout 60s bun prettier --write . --ignore-path .prettierignore --log-level warn || {
+          timeout 60s bunx prettier --write . --ignore-path .prettierignore --log-level warn || {
             echo "Prettier failed or timed out, but continuing..."
             exit 0
           }
@@ -227,17 +239,17 @@ jobs:
       - name: Run ESLint
         if: matrix.tool == 'eslint'
         shell: bash
-        run: bun eslint . --fix
+        run: bunx eslint . --fix
 
       - name: Run Stylelint
         if: matrix.tool == 'stylelint'
         shell: bash
-        run: bun stylelint '**/*.scss' --fix
+        run: bunx stylelint '**/*.scss' --fix
 
       - name: Run markdownlint
         if: matrix.tool == 'markdownlint'
         shell: bash
-        run: bun markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/vendor/**' '!**/tmp/**' '!**/log/**' '!**/coverage/**' '!**/storage/**' '!**/licenses/**' --fix --config .markdownlint-cli2.jsonc
+        run: bunx markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/vendor/**' '!**/tmp/**' '!**/log/**' '!**/coverage/**' '!**/storage/**' '!**/licenses/**' --fix --config .markdownlint-cli2.jsonc
 
   validation:
     needs: install
@@ -256,6 +268,8 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run i18n validation
         if: matrix.tool == 'i18n-validation'
@@ -291,6 +305,8 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Security Analysis
         uses: ./.github/actions/security-analysis
@@ -314,6 +330,8 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Code Quality Analysis
         uses: ./.github/actions/code-quality
@@ -340,6 +358,8 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Tests
         uses: ./.github/actions/run-tests
@@ -400,12 +420,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
 
-      - name: Bypass Cloudflare for Github Action
-        uses: ./.github/actions/bypass-cloudflare
-        with:
-          cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-          cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
       - name: Log in to Quay
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
@@ -441,13 +455,19 @@ jobs:
       - name: Wait for deploy
         run: sleep 90
 
+      - name: Bypass Cloudflare for health check
+        uses: ./.github/actions/bypass-cloudflare
+        with:
+          cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
       - name: Smoke check /up
         id: smoke
         env:
           DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
         run: |
           set -euo pipefail
-          URL="${DEPLOY_HEALTH_URL:-https://libreverse.geor.me/up}"
+          URL="${DEPLOY_HEALTH_URL:-https://libreverse-legacy.geor.me/up}"
           for i in 1 2 3; do
             if curl -fsS --max-time 30 "$URL" >/dev/null; then
               echo "Health check passed: $URL"

@@ -1,5 +1,15 @@
 name: Restore dependencies
-description: Restore vendor/bundle and node_modules from install job cache
+description: Restore vendor/bundle and node_modules from install job artifact
+
+inputs:
+    install-fallback:
+        description: Run bundle/bun install if artifact and cache are missing
+        required: false
+        default: "true"
+    use-socket-firewall:
+        description: Use sfw for fallback install when SOCKET_API_KEY is set
+        required: false
+        default: "false"
 
 runs:
     using: composite
@@ -19,19 +29,61 @@ runs:
           with:
               node-version: "20"
 
-        - name: Restore Ruby bundle cache
+        - name: Download dependencies from install job
+          uses: actions/download-artifact@v4
+          continue-on-error: true
+          with:
+              name: ci-deps-${{ github.run_id }}
+              path: .
+
+        - name: Restore Ruby bundle cache (fallback)
           uses: actions/cache/restore@v4
           with:
               path: vendor/bundle
               key: deps-${{ runner.os }}-bundle-${{ hashFiles('Gemfile.lock') }}
+              restore-keys: |
+                  deps-${{ runner.os }}-bundle-
 
-        - name: Restore node_modules cache
+        - name: Restore node_modules cache (fallback)
+          id: bun-cache
           uses: actions/cache/restore@v4
           with:
               path: |
                   node_modules
                   ~/.bun
               key: deps-${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+              restore-keys: |
+                  deps-${{ runner.os }}-bun-
+
+        - name: Socket Firewall (fallback install)
+          if: inputs.install-fallback == 'true' && inputs.use-socket-firewall == 'true'
+          uses: ./.github/actions/socket-firewall
+          with:
+              socket-token: ${{ env.SOCKET_API_KEY }}
+
+        - name: Fallback install dependencies
+          if: inputs.install-fallback == 'true'
+          shell: bash
+          run: |
+              set -euo pipefail
+              bundle config set --local path 'vendor/bundle'
+              bundle config set without ""
+              if ! bundle check >/dev/null 2>&1; then
+                echo "Bundle missing; installing..."
+                if [ "${{ inputs.use-socket-firewall }}" = "true" ] && [ -n "${SOCKET_API_KEY:-}" ] && command -v sfw >/dev/null 2>&1; then
+                  sfw bundle install --retry 3 --jobs 4
+                else
+                  bundle install --retry 3 --jobs 4
+                fi
+              fi
+              if [ ! -d node_modules ] || [ "${{ steps.bun-cache.outputs.cache-hit }}" != "true" ]; then
+                echo "node_modules missing; installing..."
+                if [ "${{ inputs.use-socket-firewall }}" = "true" ] && [ -n "${SOCKET_API_KEY:-}" ] && command -v sfw >/dev/null 2>&1; then
+                  sfw bun install --frozen-lockfile
+                else
+                  bun install --frozen-lockfile
+                fi
+              fi
 
         - name: Verify bundle
           shell: bash

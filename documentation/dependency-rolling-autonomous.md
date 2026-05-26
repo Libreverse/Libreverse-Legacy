@@ -2,7 +2,7 @@
 
 Design for **perpetual, review-free** dependency updates on Libreverse-Legacy: Dependabot PRs merge and deploy to production with **zero human approval**, as long as machine-verifiable gates pass. Humans are notified only when automation **cannot** reach a safe decision (stuck PR, policy conflict, rollback) — not for routine bumps.
 
-**Status:** Implemented in repo (phases 1–5). Enable rolling by setting repository variable `AUTODEP_MERGE_ENABLED=true` (and optional `AUTODEP_MAJOR_MERGE_ENABLED=true`). Requires secrets: `SOCKET_API_KEY`, `APP_ID`, `APP_PRIVATE_KEY`, plus existing deploy secrets. Optional: `DEPLOY_HEALTH_URL` (defaults to `https://libreverse.geor.me/up`).
+**Status:** Implemented in repo (phases 1–5). Enable rolling by setting repository variable `AUTODEP_MERGE_ENABLED=true` (and optional `AUTODEP_MAJOR_MERGE_ENABLED=true`). Requires secrets: `SOCKET_API_KEY`, `APP_ID`, `APP_PRIVATE_KEY`, plus existing deploy secrets. Optional: `DEPLOY_HEALTH_URL` (defaults to `https://libreverse-legacy.geor.me/up`; smoke runs after the Cloudflare bypass step).
 
 **Related:** [package-age-gates workflow](.windsurf/workflows/package-age-gates.md), `.github/dependabot.yml`, `.github/workflows/auto-approve.yml`, `.github/workflows/ci.yml`
 

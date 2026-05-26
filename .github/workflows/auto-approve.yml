@@ -16,6 +16,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      checks: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         if: github.event_name == 'pull_request_target'
@@ -60,8 +61,43 @@ jobs:
         run: |
           set -euo pipefail
           PR="${{ github.event.pull_request.number }}"
-          gh pr checks "$PR" --repo "${{ github.repository }}" --watch --fail-fast
-          gh pr merge "$PR" --repo "${{ github.repository }}" --rebase --delete-branch --auto
+          REPO="${{ github.repository }}"
+          REQUIRED_CHECKS=(
+            "Dependency gates"
+            "Install dependencies"
+            "Verify (aggregate)"
+          )
+          for attempt in $(seq 1 90); do
+            mapfile -t rows < <(gh pr checks "$PR" --repo "$REPO" --json name,state --jq '.[] | "\(.name)\t\(.state)"')
+            pending=0
+            failed=0
+            for required in "${REQUIRED_CHECKS[@]}"; do
+              state=$(printf '%s\n' "${rows[@]}" | awk -F'\t' -v n="$required" '$1==n {print $2; exit}')
+              if [ -z "$state" ]; then
+                pending=$((pending + 1))
+                continue
+              fi
+              case "$state" in
+                SUCCESS|SKIPPED|NEUTRAL) ;;
+                PENDING|IN_PROGRESS|QUEUED|WAITING) pending=$((pending + 1)) ;;
+                *)
+                  echo "::error::Required check '$required' is $state"
+                  exit 1
+                  ;;
+              esac
+            done
+            if [ "$pending" -eq 0 ]; then
+              echo "Required rolling checks passed."
+              break
+            fi
+            echo "Waiting for required checks ($pending pending)... attempt $attempt/90"
+            sleep 30
+          done
+          if [ "$pending" -ne 0 ]; then
+            echo "::error::Timed out waiting for required checks"
+            exit 1
+          fi
+          gh pr merge "$PR" --repo "$REPO" --rebase --delete-branch --auto
 
       - name: Bulk retry stale Dependabot PRs
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -77,7 +113,6 @@ jobs:
             echo "Approving PR #$pr"
             gh pr review "$pr" --approve || true
             if [ "${{ vars.AUTODEP_MERGE_ENABLED }}" = "true" ]; then
-              gh pr checks "$pr" --repo "${{ github.repository }}" --watch --fail-fast || continue
               gh pr merge "$pr" --rebase --delete-branch --auto || echo "Merge deferred for #$pr"
             fi
           done
