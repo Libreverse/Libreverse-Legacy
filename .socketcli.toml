@@ -1,0 +1,6 @@
+# Socket CLI — PR delta scans for Libreverse-Legacy autonomous rolling.
+# Blocking categories not listed here are filtered by scripts/socket-policy-filter.mjs
+
+[scan]
+# Fail only on critical Socket actions; compound obfuscation rules applied post-SARIF.
+strict = false

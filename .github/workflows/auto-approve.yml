@@ -1,41 +1,83 @@
 name: Auto approve
 
 on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+# Set repository variable AUTODEP_MERGE_ENABLED=true to allow bot merge (patch/minor/actions).
+# Major merges require AUTODEP_MAJOR_MERGE_ENABLED=true and passing gates + verify.
 
 jobs:
-    auto-approve:
-        runs-on: ubuntu-latest
-        permissions:
-            pull-requests: write
-        steps:
-            - uses: actions/checkout@v6
-            - uses: actions/create-github-app-token@v3
-              id: app-token
-              with:
-                  app-id: ${{ secrets.APP_ID }}
-                  private-key: ${{ secrets.APP_PRIVATE_KEY }}
-            - uses: hmarr/auto-approve-action@v4
-              if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
-              with:
-                  github-token: ${{ steps.app-token.outputs.token }}
-            - name: Auto-merge Dependabot PR
-              if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
-              env:
-                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
-              run: |
-                  gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --watch --fail-fast
-                  gh pr merge ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --rebase --delete-branch --auto || echo "Failed to auto-merge (may need retry)"
-            - name: Bulk approve Dependabot PRs
-              if: github.event_name == 'workflow_dispatch'
-              env:
-                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
-              run: |
-                  # List open PRs from dependabot and approve them
-                  prs=$(gh pr list --author dependabot[bot] --state open --json number --jq '.[].number')
-                  for pr in $prs; do
-                    echo "Approving PR #$pr"
-                    gh pr review $pr --approve
-                    echo "Merging and cleaning up PR #$pr"
-                    gh pr checks $pr --repo ${{ github.repository }} --watch --fail-fast
-                    gh pr merge $pr --rebase --delete-branch --auto || echo "Failed to merge PR #$pr (may be conflicting or in progress)"
-                  done
+  auto-approve:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: github.event_name == 'pull_request_target'
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
+        with:
+          bun-version-file: .bun-version
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Classify Dependabot bump
+        if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
+        id: semver
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: bun scripts/dependabot-semver-classify.mjs
+
+      - uses: hmarr/auto-approve-action@v4
+        if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Auto-merge Dependabot PR
+        if: |
+          github.event_name == 'pull_request_target' &&
+          github.actor == 'dependabot[bot]' &&
+          vars.AUTODEP_MERGE_ENABLED == 'true' &&
+          (
+            steps.semver.outputs.automerge_tier == 'auto' ||
+            (vars.AUTODEP_MAJOR_MERGE_ENABLED == 'true' && steps.semver.outputs.automerge_tier == 'major-conditional')
+          )
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          PR="${{ github.event.pull_request.number }}"
+          gh pr checks "$PR" --repo "${{ github.repository }}" --watch --fail-fast
+          gh pr merge "$PR" --repo "${{ github.repository }}" --rebase --delete-branch --auto
+
+      - name: Bulk retry stale Dependabot PRs
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ vars.AUTODEP_MERGE_ENABLED }}" != "true" ]; then
+            echo "AUTODEP_MERGE_ENABLED is not true; approving only."
+          fi
+          prs=$(gh pr list --author "dependabot[bot]" --state open --json number --jq '.[].number')
+          for pr in $prs; do
+            echo "Approving PR #$pr"
+            gh pr review "$pr" --approve || true
+            if [ "${{ vars.AUTODEP_MERGE_ENABLED }}" = "true" ]; then
+              gh pr checks "$pr" --repo "${{ github.repository }}" --watch --fail-fast || continue
+              gh pr merge "$pr" --rebase --delete-branch --auto || echo "Merge deferred for #$pr"
+            fi
+          done

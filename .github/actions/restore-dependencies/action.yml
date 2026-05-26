@@ -1,0 +1,41 @@
+name: Restore dependencies
+description: Restore vendor/bundle and node_modules from install job cache
+
+runs:
+    using: composite
+    steps:
+        - name: Setup Ruby
+          uses: ruby/setup-ruby@v1
+          with:
+              bundler-cache: false
+
+        - name: Setup Bun
+          uses: oven-sh/setup-bun@v2
+          with:
+              bun-version-file: .bun-version
+
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+              node-version: "20"
+
+        - name: Restore Ruby bundle cache
+          uses: actions/cache/restore@v4
+          with:
+              path: vendor/bundle
+              key: deps-${{ runner.os }}-bundle-${{ hashFiles('Gemfile.lock') }}
+
+        - name: Restore node_modules cache
+          uses: actions/cache/restore@v4
+          with:
+              path: |
+                  node_modules
+                  ~/.bun
+              key: deps-${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+        - name: Verify bundle
+          shell: bash
+          run: |
+              set -euo pipefail
+              bundle config set --local path 'vendor/bundle'
+              bundle check

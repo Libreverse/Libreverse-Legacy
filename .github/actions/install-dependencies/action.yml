@@ -1,0 +1,42 @@
+name: Install dependencies (Socket Firewall)
+description: Install Ruby and JS deps via sfw only
+
+inputs:
+    socket-token:
+        description: Socket API token
+        required: true
+
+runs:
+    using: composite
+    steps:
+        - uses: ./.github/actions/socket-firewall
+          with:
+              socket-token: ${{ inputs.socket-token }}
+
+        - name: Fix permissions
+          shell: bash
+          run: sudo chmod -R u+w .
+
+        - name: Setup Ruby
+          uses: ruby/setup-ruby@v1
+          with:
+              bundler-cache: false
+
+        - name: Setup Bun
+          uses: oven-sh/setup-bun@v2
+          with:
+              bun-version-file: .bun-version
+
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+              node-version: "20"
+
+        - name: Install via sfw
+          shell: bash
+          run: |
+              set -euo pipefail
+              bundle config set --local path 'vendor/bundle'
+              bundle config set without ""
+              sfw bundle install --retry 3 --jobs 4
+              sfw bun install --frozen-lockfile

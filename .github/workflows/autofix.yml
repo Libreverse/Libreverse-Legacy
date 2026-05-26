@@ -27,6 +27,10 @@ jobs:
 
             - name: Setup Environment
               uses: ./.github/actions/setup-environment
+              env:
+                  SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
+              with:
+                  use-socket-firewall: ${{ secrets.SOCKET_API_KEY != '' && 'true' || 'false' }}
 
             - name: Determine changed files
               id: changes

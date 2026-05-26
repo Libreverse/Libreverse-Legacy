@@ -1,6 +1,16 @@
 name: "Setup Environment"
 description: "Set up Ruby, Bun, Node.js and install dependencies"
 
+inputs:
+    skip-install:
+        description: Only set up runtimes (no bundle/bun install)
+        required: false
+        default: "false"
+    use-socket-firewall:
+        description: Wrap bundle/bun with sfw (requires SOCKET_API_KEY in env)
+        required: false
+        default: "false"
+
 runs:
     using: "composite"
     steps:
@@ -41,13 +51,26 @@ runs:
           with:
               node-version: "20"
 
+        - name: Socket Firewall
+          if: inputs.skip-install != 'true' && inputs.use-socket-firewall == 'true'
+          uses: ./.github/actions/socket-firewall
+          with:
+              socket-token: ${{ env.SOCKET_API_KEY || '' }}
+
         - name: Install dependencies
+          if: inputs.skip-install != 'true'
           shell: bash
           run: |
+              set -euo pipefail
               bundle config set --local path 'vendor/bundle'
               bundle config set without ""
-              bundle install --retry 3 --jobs 4
-              bun install --verbose
+              if [ "${{ inputs.use-socket-firewall }}" = "true" ]; then
+                sfw bundle install --retry 3 --jobs 4
+                sfw bun install --frozen-lockfile
+              else
+                bundle install --retry 3 --jobs 4
+                bun install --verbose
+              fi
 
         - name: Verify bundle installation
           shell: bash

@@ -1,0 +1,15 @@
+name: Socket Firewall
+description: Install Socket Firewall Enterprise (sfw wrapper)
+
+inputs:
+    socket-token:
+        description: Socket API token
+        required: true
+
+runs:
+    using: composite
+    steps:
+        - uses: SocketDev/action@2d3f25590c6ed6ba11a9a14c064d962a3a04698f # v1.3.1
+          with:
+              mode: firewall-enterprise
+              socket-token: ${{ inputs.socket-token }}
