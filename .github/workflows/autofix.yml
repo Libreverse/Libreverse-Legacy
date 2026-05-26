@@ -20,10 +20,17 @@ jobs:
             github.actor != 'github-actions[bot]' &&
             !contains(github.event.head_commit.message, 'chore(autofix)')
         steps:
+            - uses: actions/create-github-app-token@v3
+              id: app-token
+              with:
+                  app-id: ${{ secrets.APP_ID }}
+                  private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
             - name: Check out code
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   fetch-depth: 0
+                  token: ${{ steps.app-token.outputs.token }}
 
             - name: Setup Environment
               uses: ./.github/actions/setup-environment
@@ -167,11 +174,11 @@ jobs:
               if: always()
               uses: stefanzweifel/git-auto-commit-action@v7
               with:
+                  token: ${{ steps.app-token.outputs.token }}
                   commit_message: "chore(autofix): apply automated format/lint fixes"
                   branch: ${{ github.head_ref || github.ref_name }}
                   commit_user_name: github-actions[bot]
                   commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
-                  push_options: "--force-with-lease"
                   skip_fetch: false
                   file_pattern: |
                       app/**
