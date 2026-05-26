@@ -288,10 +288,10 @@ globalThis.Hashcash.sha1 = function (message) {
     var index, index_;
     var W = Array.from({ length: 80 });
     var H0 = 0x67_45_23_01;
-    var H1 = 0xEF_CD_AB_89;
-    var H2 = 0x98_BA_DC_FE;
+    var H1 = 0xef_cd_ab_89;
+    var H2 = 0x98_ba_dc_fe;
     var H3 = 0x10_32_54_76;
-    var H4 = 0xC3_D2_E1_F0;
+    var H4 = 0xc3_d2_e1_f0;
     var A, B, C, D, E;
     var temporary;
     message = Utf8Encode(message);
@@ -335,7 +335,7 @@ globalThis.Hashcash.sha1 = function (message) {
     while (word_array.length % 16 != 14) word_array.push(0);
     word_array.push(
         message_length >>> 29,
-        (message_length << 3) & 0x0_FF_FF_FF_FF,
+        (message_length << 3) & 0x0_ff_ff_ff_ff,
     );
     for (blockstart = 0; blockstart < word_array.length; blockstart += 16) {
         for (index = 0; index < 16; index++)
@@ -356,8 +356,8 @@ globalThis.Hashcash.sha1 = function (message) {
                     ((B & C) | (~B & D)) +
                     E +
                     W[index] +
-                    0x5A_82_79_99) &
-                0x0_FF_FF_FF_FF;
+                    0x5a_82_79_99) &
+                0x0_ff_ff_ff_ff;
             E = D;
             D = C;
             C = rotate_left(B, 30);
@@ -370,8 +370,8 @@ globalThis.Hashcash.sha1 = function (message) {
                     (B ^ C ^ D) +
                     E +
                     W[index] +
-                    0x6E_D9_EB_A1) &
-                0x0_FF_FF_FF_FF;
+                    0x6e_d9_eb_a1) &
+                0x0_ff_ff_ff_ff;
             E = D;
             D = C;
             C = rotate_left(B, 30);
@@ -384,8 +384,8 @@ globalThis.Hashcash.sha1 = function (message) {
                     ((B & C) | (B & D) | (C & D)) +
                     E +
                     W[index] +
-                    0x8F_1B_BC_DC) &
-                0x0_FF_FF_FF_FF;
+                    0x8f_1b_bc_dc) &
+                0x0_ff_ff_ff_ff;
             E = D;
             D = C;
             C = rotate_left(B, 30);
@@ -398,19 +398,19 @@ globalThis.Hashcash.sha1 = function (message) {
                     (B ^ C ^ D) +
                     E +
                     W[index] +
-                    0xCA_62_C1_D6) &
-                0x0_FF_FF_FF_FF;
+                    0xca_62_c1_d6) &
+                0x0_ff_ff_ff_ff;
             E = D;
             D = C;
             C = rotate_left(B, 30);
             B = A;
             A = temporary;
         }
-        H0 = (H0 + A) & 0x0_FF_FF_FF_FF;
-        H1 = (H1 + B) & 0x0_FF_FF_FF_FF;
-        H2 = (H2 + C) & 0x0_FF_FF_FF_FF;
-        H3 = (H3 + D) & 0x0_FF_FF_FF_FF;
-        H4 = (H4 + E) & 0x0_FF_FF_FF_FF;
+        H0 = (H0 + A) & 0x0_ff_ff_ff_ff;
+        H1 = (H1 + B) & 0x0_ff_ff_ff_ff;
+        H2 = (H2 + C) & 0x0_ff_ff_ff_ff;
+        H3 = (H3 + D) & 0x0_ff_ff_ff_ff;
+        H4 = (H4 + E) & 0x0_ff_ff_ff_ff;
     }
     return [H0, H1, H2, H3, H4];
 };
@@ -438,8 +438,8 @@ globalThis.Hashcash.sha1.lsb_hex = function (value) {
     var vh;
     var vl;
     for (index = 0; index <= 6; index += 2) {
-        vh = (value >>> (index * 4 + 4)) & 0x0F;
-        vl = (value >>> (index * 4)) & 0x0F;
+        vh = (value >>> (index * 4 + 4)) & 0x0f;
+        vl = (value >>> (index * 4)) & 0x0f;
         string_ += vh.toString(16) + vl.toString(16);
     }
     return string_;
@@ -450,7 +450,7 @@ globalThis.Hashcash.sha1.cvt_hex = function (value) {
     var index;
     var v;
     for (index = 7; index >= 0; index--) {
-        v = (value >>> (index * 4)) & 0x0F;
+        v = (value >>> (index * 4)) & 0x0f;
         string_ += v.toString(16);
     }
     return string_;
