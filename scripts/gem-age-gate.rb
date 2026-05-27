@@ -12,7 +12,7 @@ require 'date'
 
 MIN_AGE_DAYS = 7
 MIN_AGE_SECONDS = MIN_AGE_DAYS * 24 * 60 * 60
-CUTOFF_DATE = Time.now - MIN_AGE_SECONDS
+CUTOFF_DATE = Time.zone.now - MIN_AGE_SECONDS
 
 RED = "\e[31m"
 YELLOW = "\e[33m"
@@ -103,7 +103,7 @@ def validate
               name: name,
               version: version,
               published: published,
-              days_ago: ((Time.now - published) / (24 * 60 * 60)).to_i
+              days_ago: ((Time.zone.now - published) / (24 * 60 * 60)).to_i
             }
           end
           print "   #{checked}/#{gems.length} checked...\r"

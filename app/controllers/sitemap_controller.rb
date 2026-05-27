@@ -116,17 +116,18 @@ class SitemapController < ApplicationController
     # so the block is skipped and controller action effectively ends here.
   end
 
-  private
-
   def self.sitemap_mutex
     @sitemap_mutex ||= Mutex.new
   end
+  private_class_method :sitemap_mutex
+
+  private
 
   def sitemap_mutex
-    self.class.sitemap_mutex
+    self.class.send(:sitemap_mutex)
   end
 
-   def generate_dynamic_sitemap(host)
+  def generate_dynamic_sitemap(host)
      Rails.logger.info "Generating dynamic sitemap for host: #{host}"
 
      # Temporarily configure sitemap_generator
@@ -135,7 +136,7 @@ class SitemapController < ApplicationController
      original_compress = SitemapGenerator::Sitemap.compress
 
      begin
-      self.class.sitemap_mutex.synchronize do
+      sitemap_mutex.synchronize do
         Rails.logger.debug "Acquired sitemap mutex lock"
 
         SitemapGenerator::Sitemap.default_host = host
@@ -206,5 +207,5 @@ class SitemapController < ApplicationController
       SitemapGenerator::Sitemap.adapter = original_adapter
       SitemapGenerator::Sitemap.compress = original_compress
      end
-   end
+  end
 end

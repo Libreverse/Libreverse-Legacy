@@ -129,7 +129,7 @@ module LibreverseInstance
       Rack::Runtime,
       WorkerKiller::Middleware::RequestsLimiter,
       killer: killer,
-      min: 3072,  # kill after between 3072–4096 requests (randomised to avoid thundering herd)
+      min: 3072, # kill after between 3072–4096 requests (randomised to avoid thundering herd)
       max: 4096
     )
 
