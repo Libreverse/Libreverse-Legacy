@@ -2,13 +2,17 @@
 
 Design for **perpetual, review-free** dependency updates on Libreverse-Legacy: Dependabot PRs merge and deploy to production with **zero human approval**, as long as machine-verifiable gates pass. Humans are notified only when automation **cannot** reach a safe decision (stuck PR, policy conflict, rollback) — not for routine bumps.
 
-**Status:** Phases 1–5 are **wired in repo** but **not production-ready** until the [finalization checklist](#finalization-checklist) below is complete. Do **not** rely on Socket Firewall Enterprise — this project uses **Socket Free** (CLI scans + optional local **Firewall Free** for npm/pip) and **Snyk Free** (quota-managed SCA/SAST/container), alongside existing CodeQL, brakeman, and audits.
+**Status:** Phases 1–5 are **wired in repo**. **Autonomous merge is paused** (`AUTODEP_MERGE_ENABLED=false`). **Not production-ready** until [B5–B7](#b-ci-plumbing-keep-fix-known-failures) and [C4](#c-autonomous-rolling-controls-keep) are done.
 
-Enable rolling when checklist items through **CI green on a Dependabot PR** are done:
+Security model: **Socket Free** (PR `socketcli` only) + **Snyk Free** (gates + container on deploy) + CodeQL / brakeman / audits. **No** Socket Firewall Enterprise, **no** Bun install-time scanner (quota).
 
-- Repository variable `AUTODEP_MERGE_ENABLED=true` (optional `AUTODEP_MAJOR_MERGE_ENABLED=true` for majors).
-- Secrets: `SOCKET_API_KEY` (scans only), `SNYK_TOKEN` (after Snyk wired), `APP_ID`, `APP_PRIVATE_KEY`, plus existing deploy secrets.
-- Optional: `DEPLOY_HEALTH_URL` (defaults to `https://libreverse-legacy.geor.me/up`; smoke runs after Cloudflare bypass).
+**Latest `main` commit (infra):** `c47e8091` — May 2026 finalization pass. **No green CI run completed** after that pass (runs were cancelled before meeting).
+
+Enable rolling when:
+
+- **B5** + **B6** green (see [current status](#current-status-may-2026)).
+- Repository variable `AUTODEP_MERGE_ENABLED=true` (currently **`false`**).
+- Branch protection on the three required checks ([C4](#c-autonomous-rolling-controls-keep)).
 
 **TiDB pause (2026):** Serverless TiDB free tier is exhausted; the instance is shut down until credits reset (~June). Set `TIDB_INSTANCE_AVAILABLE=false` while paused. When `false`, CI skips `rails-test` and **Build & Deploy** (Quay, Coolify, smoke, rollback). Gates and patch/minor auto-merge on PRs can still run. Set `TIDB_INSTANCE_AVAILABLE=true` when the database is back.
 
@@ -396,6 +400,92 @@ Expect **monthly digests** and **rare halt alerts**, not per-PR notifications.
 
 ---
 
+## Current status (May 2026)
+
+Use this section to decide what to do next. Detail checklist below.
+
+### Where we are
+
+| Area | State |
+|------|--------|
+| **Goal** | Dependabot PRs merge without human review when gates + verify pass |
+| **Autonomous merge** | **Off** — `AUTODEP_MERGE_ENABLED=false` (paused before meeting) |
+| **Deploy / TiDB** | **Off** — `TIDB_INSTANCE_AVAILABLE=false` until ~June 2026 |
+| **CI on `main`** | **Pipeline validated** — gates/install/verify run end-to-end; matrix scoped (57 md / 27 coffee files); not green yet (code lint + jest ESM) |
+| **Dependabot PRs** | Many open; none proven green end-to-end on current `main` workflow |
+| **GitHub Actions** | **Idle** — no in-progress runs (as of last check) |
+
+### What we’ve done (code + config on `main`)
+
+| Done | Summary |
+|------|---------|
+| **Pipeline order** | `gates` → `install` → matrix → `verify` → `build-push` (deploy gated on TiDB) |
+| **Socket Enterprise removed** | Plain `bundle`/`bun` install; deleted `install-dependencies` / Docker `sfw` |
+| **Socket PR scans** | `socketcli` + policy filter in **gates** (PR only, Python 3.12) |
+| **Snyk** | `snyk test --all-projects` in **gates** (PR); container scan in **build-push** when deploy on |
+| **Secrets (you)** | `SNYK_TOKEN`, `SNYK_ORG`, `SOCKET_API_KEY`, App + deploy secrets present |
+| **Bun 1.3.14** | Pinned; lockfile updated |
+| **Bun Socket scanner** | **Removed** — hit 429 / quota on full install |
+| **CI install artifact** | Upload `node_modules` only; gems via cache (fixes herb `?` path) |
+| **Age gates** | Delta gates run on **`pull_request` only** (not every `main` push) |
+| **Auto-approve race** | Polls only Gates / Install / Verify (not all checks) |
+| **Typos** | `typos.toml` + **allowlisted paths only** (not repo-wide) |
+| **Lint scope** | ESLint → `app/javascript`, `test/javascript`; stylelint → `app/stylesheets/**/*.scss`; hadolint → root `Dockerfile` only |
+| **socket-post-merge** | Weekly cron + manual only (no every-push scan) |
+| **Autofix / workflows** | `auto-approve`, `dependency-gates-retry`, `post-deploy-rollback` exist on `main` |
+
+### CI validation runs (May 2026)
+
+| Run | Commit | Outcome |
+|-----|--------|---------|
+| [26530547866](https://github.com/Libreverse/Libreverse-Legacy/actions/runs/26530547866) | empty trigger | **Infra OK**; matrix failed (unscoped tools, eslint/jest misconfig) |
+| [26531454662](https://github.com/Libreverse/Libreverse-Legacy/actions/runs/26531454662) | `d66f8be5` scoping | **Pipeline OK**; markdownlint **57 files** (was 1950); coffeelint **app/javascript only**; prettier/typos/stylelint ✅ |
+
+**CI operating correctly** when:
+
+- Dependency gates → Install dependencies → parallel matrix → Verify (aggregate) all complete (~9 min).
+- `workflow_dispatch` on **CI/CD Pipeline** can re-validate without empty commits.
+
+**Still failing (application code / env — fix in “get green” phase, not plumbing):**
+
+| Job | Cause |
+|-----|--------|
+| jest | ESM in `jsdom` deps on Node 20 (bump to 22 in progress) |
+| eslint | Real rule violations (eslint 9 runs; was crash on eslint 10) |
+| coffeelint / markdownlint / rubocop | Real lint in app/vendor-gem docs |
+| hadolint | Dockerfile warnings (threshold `error` — should pass after next push) |
+
+### What you still need to do (manual)
+
+| Item | Status |
+|------|--------|
+| **Branch protection** on `main` | Not confirmed — required: **Dependency gates**, **Install dependencies**, **Verify (aggregate)** |
+| **GitHub App ruleset bypass** | For autofix / socket baseline push to `main` ([D5](#d-deploy-and-production-keep-tidb-gated)) |
+| **Re-enable auto-merge** | Set `AUTODEP_MERGE_ENABLED=true` only after **B6** |
+| **TiDB back (~June)** | Set `TIDB_INSTANCE_AVAILABLE=true`, then validate deploy/smoke |
+| **Optional** | Snyk/GitHub App on PRs (avoid double scan with CLI); monthly quota review |
+
+### What’s left (recommended order)
+
+1. **B5** — One clean **`main`** CI run (workflow_dispatch or push) with current config.
+2. **B7** — Fix or relax failing jobs: jest, hadolint, coffeelint, eslint, rubocop, markdownlint, stylelint; confirm **typos** passes with allowlist.
+3. **B6** — Rebase + green CI on **one** Dependabot PR (smallest bump preferred).
+4. **C4** — Branch protection (you).
+5. **C2** — `AUTODEP_MERGE_ENABLED=true`.
+6. **D2+** — When TiDB returns: deploy, smoke, rollback test.
+
+### Decision menu (pick one)
+
+| Option | Action |
+|--------|--------|
+| **A. Validate only** | Trigger `main` CI, report results, no code changes |
+| **B. Fix CI** | Triage and fix failing matrix jobs until `main` is green |
+| **C. Rolling first** | Fix only what blocks one Dependabot PR; defer other linters |
+| **D. Pause rolling** | Leave `AUTODEP_MERGE_ENABLED=false`; use gates manually on PRs |
+| **E. Deploy path** | Wait for TiDB; focus on PR merge without deploy |
+
+---
+
 ## Finalization checklist
 
 Work through in order. Check off in PRs or project board as completed.
@@ -425,15 +515,15 @@ Work through in order. Check off in PRs or project board as completed.
 
 ### C. Autonomous rolling controls (keep)
 
-- [ ] **C1.** `auto-approve.yml` triggers: `pull_request_target`, weekly schedule, `workflow_dispatch`.
-- [ ] **C2.** `AUTODEP_MERGE_ENABLED=true` only after **B6** passes.
-- [ ] **C3.** `dependency-gates-retry.yml` running on schedule for stuck PRs.
+- [x] **C1.** `auto-approve.yml` triggers: `pull_request_target`, weekly schedule, `workflow_dispatch`.
+- [ ] **C2.** `AUTODEP_MERGE_ENABLED=true` only after **B6** passes. (**Currently `false` — intentional pause.**)
+- [x] **C3.** `dependency-gates-retry.yml` exists on `main` (confirm schedule enabled in GitHub if needed).
 - [ ] **C4.** Branch protection: required checks = **Dependency gates**, **Install dependencies**, **Verify (aggregate)**; no human reviewers.
-- [ ] **C5.** Optional: `AUTODEP_MAJOR_MERGE_ENABLED` after major rules validated.
+- [ ] **C5.** Optional: `AUTODEP_MAJOR_MERGE_ENABLED` after major rules validated. (**Currently `false`.**)
 
 ### D. Deploy and production (keep, TiDB-gated)
 
-- [ ] **D1.** While paused: `TIDB_INSTANCE_AVAILABLE=false` — accept no deploy/smoke/rails-test.
+- [x] **D1.** While paused: `TIDB_INSTANCE_AVAILABLE=false` — accept no deploy/smoke/rails-test.
 - [ ] **D2.** ~June 2026: restart TiDB; set `TIDB_INSTANCE_AVAILABLE=true`.
 - [ ] **D3.** Smoke: `DEPLOY_HEALTH_URL` + Cloudflare bypass immediately before curl.
 - [ ] **D4.** `post-deploy-rollback.yml` tested once deploy path is green.
@@ -468,7 +558,10 @@ Work through in order. Check off in PRs or project board as completed.
 | socket-post-merge push rejected | ruleset on `main` | D5, A8 |
 | Smoke 403 | CF + wrong host | D3 |
 | rails-test / deploy red | TiDB off | D1 |
+| Socket Bun scanner 429 on install | API key + full lockfile scan | Removed scanner (A3b) |
+| `typos` very slow / hung | Repo-wide scan | Allowlisted paths + `typos.toml` |
+| CI runs pile up | Concurrent pushes + long jobs | Cancelled runs; merge paused |
 
 ---
 
-*Last updated: May 2026 — free-tier security model (Socket scan + Snyk) and finalization checklist added.*
+*Last updated: 27 May 2026 — current status section, Bun scanner removed, merge paused.*
