@@ -1,17 +1,29 @@
 {
     "config": {
         "MD007": false,
-        "MD013": false,
+        "MD013": false
     },
     "fix": true,
     "gitignore": true,
+    // Application Markdown only (not node_modules / Bun-hoisted deps at repo root).
+    "globs": [
+        "*.md",
+        "documentation/**/*.md",
+        "app/**/*.md",
+        "test/**/*.md",
+        "plugins/**/*.md",
+        ".github/**/*.md",
+        ".windsurf/**/*.md",
+        "vendor/gems/**/*.md"
+    ],
     "ignores": [
         "node_modules/",
-        "vendor/",
+        "vendor/bundle/",
         "tmp/",
         "log/",
         "coverage/",
-        ".codeql/",
-        ".github/",
-    ],
+        "storage/",
+        "licenses/",
+        ".codeql/"
+    ]
 }

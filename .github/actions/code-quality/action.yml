@@ -23,13 +23,11 @@ runs:
           if: inputs.tool == 'coffeelint'
           shell: bash
           run: |
-              echo "Searching for CoffeeScript files..."
-              coffee_files=$(find . -path ./node_modules -prune -o -path ./vendor -prune -o -path ./tmp -prune -o -name '*.coffee' -print)
-              if [ -n "$coffee_files" ]; then
-                echo "Found CoffeeScript files:"
-                echo "$coffee_files"
-                echo "Running coffeelint..."
-                echo "$coffee_files" | xargs bun coffeelint -f coffeelint.json
+              echo "Searching for CoffeeScript files under app/javascript..."
+              mapfile -t coffee_files < <(find app/javascript -type f -name '*.coffee' | sort)
+              if [ "${#coffee_files[@]}" -gt 0 ]; then
+                printf '%s\n' "${coffee_files[@]}"
+                bun coffeelint -f coffeelint.json "${coffee_files[@]}"
               else
                 echo "No .coffee files found, skipping Coffeelint"
               fi

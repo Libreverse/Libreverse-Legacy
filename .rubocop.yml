@@ -13,6 +13,12 @@ AllCops:
     Exclude:
         - "data/**/*"
         - ".codeql/**/*"
+        - "vendor/bundle/**/*"
+        - "node_modules/**/*"
+        - "tmp/**/*"
+        - "log/**/*"
+        - "coverage/**/*"
+        - "storage/**/*"
 
 # Enable key departments
 Bundler:

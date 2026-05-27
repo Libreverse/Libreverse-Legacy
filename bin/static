@@ -163,13 +163,13 @@ q{if find . -type f -name '*.sh' -not -path './vendor/*' -not -path './node_modu
                                  fi}
 );
 
-run_command("eslint", "bun", "eslint", ".", "--fix");
-run_command("Stylelint", "sh", "-c", "bun stylelint '**/*.scss' --fix");
+run_command("eslint", "bun", "eslint", "app/javascript", "test/javascript", "--fix");
+run_command("Stylelint", "sh", "-c", "bun stylelint 'app/stylesheets/**/*.scss' --fix");
 run_command("Coffeelint Fix", "sh", "-c",
-"command -v bun >/dev/null && bun coffeelint --help >/dev/null 2>&1 && find . -name '*.coffee' -not -path './node_modules/*' -print0 | xargs -0 -r bun coffeelint --fix -f coffeelint.json || true"
+"command -v bun >/dev/null && bun coffeelint --help >/dev/null 2>&1 && find app/javascript -name '*.coffee' -print0 | xargs -0 -r bun coffeelint --fix -f coffeelint.json || true"
 );
 run_command("markdownlint", "sh", "-c",
-"bun markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/licenses/**' '!**/.codeql/**' --fix --config .markdownlint-cli2.jsonc"
+"bun markdownlint-cli2 --config .markdownlint-cli2.jsonc"
 );
 run_command("bundle update", "bundle", "update");
 run_command("bun update",    "bun",    "update");

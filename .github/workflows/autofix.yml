@@ -73,23 +73,23 @@ jobs:
                   command -v bun >/dev/null 2>&1 || { echo "bun not found"; exit 0; }
 
                   # Prettier (formats many languages) – run once repo-wide, ignore unknown
-                  bun prettier --write --log-level warn --ignore-unknown . || true
-                  # Dockerfiles may already be covered above (plugin), explicit re-run cheap
-                  find . -type f -iname 'Dockerfile*' -print0 | xargs -0 -r bun prettier --write --log-level warn || true
+                  bun prettier --write --log-level warn --ignore-unknown \
+                    app config lib spec test documentation scripts plugins public .github || true
+                  find docker -type f -iname 'Dockerfile*' -print0 | xargs -0 -r bun prettier --write --log-level warn || true
 
                   # ESLint (JS/TS)
                   bun eslint app/javascript test/javascript --fix || true
 
                   # Coffeelint (CoffeeScript) with autofix
                   if bun coffeelint --help >/dev/null 2>&1; then
-                    find . -type f -name '*.coffee' -not -path './node_modules/*' -print0 | xargs -0 -r bun coffeelint --fix -f coffeelint.json || true
+                    find app/javascript -type f -name '*.coffee' -print0 | xargs -0 -r bun coffeelint --fix -f coffeelint.json || true
                   fi
 
                   # Stylelint (CSS/SCSS/SASS)
                   bun stylelint 'app/stylesheets/**/*.scss' --fix || true
 
                     # markdownlint (Markdown)
-                  bun markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/licenses/**' '!**/.codeql/**' --fix --config .markdownlint-cli2.jsonc || true
+                  bun markdownlint-cli2 --config .markdownlint-cli2.jsonc || true
 
                   # Rubocop (Ruby)
                   if bundle exec rubocop -v >/dev/null 2>&1; then
@@ -98,7 +98,7 @@ jobs:
 
                   # Haml-lint (HAML)
                   if bundle exec haml-lint -v >/dev/null 2>&1; then
-                    bundle exec haml-lint --auto-correct . || true
+                    bundle exec haml-lint --auto-correct app/ config/ lib/ --exclude 'vendor/**/*' || true
                   fi
 
                   # ERB format (exclude problematic file)

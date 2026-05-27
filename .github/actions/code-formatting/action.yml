@@ -8,7 +8,9 @@ runs:
           shell: bash
           run: |
               set -e
-              timeout 60s bun prettier --write . --ignore-path .prettierignore --log-level warn || {
+              timeout 60s bun prettier --write \
+                app config lib spec test documentation scripts plugins public .github \
+                --ignore-path .prettierignore --log-level warn || {
                 echo "Prettier failed or timed out, but continuing..."
                 exit 0
               }
@@ -31,4 +33,4 @@ runs:
 
         - name: Run markdownlint
           shell: bash
-          run: bun markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/vendor/**' '!**/tmp/**' '!**/log/**' '!**/coverage/**' '!**/storage/**' '!**/licenses/**' --fix --config .markdownlint-cli2.jsonc
+          run: bun markdownlint-cli2 --config .markdownlint-cli2.jsonc

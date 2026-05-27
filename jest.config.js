@@ -1,7 +1,14 @@
 export default {
     testEnvironment: "jsdom",
-    moduleDirectories: ["node_modules", "<rootDir>"],
-    modulePathIgnorePatterns: ["<rootDir>/.codeql/"],
+    moduleDirectories: ["node_modules"],
+    modulePathIgnorePatterns: [
+        "<rootDir>/.codeql/",
+        "<rootDir>/vendor/",
+    ],
+    watchPathIgnorePatterns: [
+        "<rootDir>/vendor/",
+        "<rootDir>/node_modules/",
+    ],
     transform: {
         "^.+\\.js$": "babel-jest",
     },

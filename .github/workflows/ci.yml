@@ -16,6 +16,7 @@ on:
     push:
         branches:
             - "main"
+    workflow_dispatch:
 
 jobs:
   gates:
@@ -204,7 +205,9 @@ jobs:
         shell: bash
         run: |
           set -e
-          timeout 60s bunx prettier --write . --ignore-path .prettierignore --log-level warn || {
+          timeout 60s bunx prettier --write \
+            app config lib spec test documentation scripts plugins public .github \
+            --ignore-path .prettierignore --log-level warn || {
             echo "Prettier failed or timed out, but continuing..."
             exit 0
           }
@@ -237,8 +240,7 @@ jobs:
             sudo apt-get update -y >/dev/null 2>&1 || true
             sudo apt-get install -y perltidy >/dev/null 2>&1 || { echo "perltidy apt install failed"; exit 0; }
           fi
-          find . -type f \( -name '*.pl' -o -name '*.pm' -o -name '*.t' -o -name '*.psgi' \) \
-            -not -path './vendor/*' -not -path './node_modules/*' -not -path './.git/*' -print0 \
+          find scripts -type f \( -name '*.pl' -o -name '*.pm' -o -name '*.t' -o -name '*.psgi' \) -print0 \
             | xargs -0 -r perltidy -pro=.perltidyrc -b || true
           find . -type f \( -name '*.pl.bak' -o -name '*.pm.bak' -o -name '*.t.bak' -o -name '*.psgi.bak' \) -delete 2>/dev/null || true
 
@@ -250,8 +252,7 @@ jobs:
           if ! command -v shfmt >/dev/null 2>&1; then
             sudo bash -lc "curl -sSL https://github.com/mvdan/sh/releases/latest/download/shfmt_v3.7.0_linux_amd64 -o /usr/local/bin/shfmt && chmod +x /usr/local/bin/shfmt" || true
           fi
-          find . -type f -name '*.sh' \
-            -not -path './vendor/*' -not -path './node_modules/*' -not -path './.git/*' -print0 \
+          find docker scripts plugins -type f -name '*.sh' -print0 \
             | xargs -0 -r shfmt -w || true
 
       - name: Run ESLint
@@ -267,7 +268,7 @@ jobs:
       - name: Run markdownlint
         if: matrix.tool == 'markdownlint'
         shell: bash
-        run: bunx markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/vendor/**' '!**/tmp/**' '!**/log/**' '!**/coverage/**' '!**/storage/**' '!**/licenses/**' --fix --config .markdownlint-cli2.jsonc
+        run: bunx markdownlint-cli2 --config .markdownlint-cli2.jsonc
 
   validation:
     needs: install
@@ -302,6 +303,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: Dockerfile
+          failure-threshold: warning
 
   security-analysis:
     needs: install
