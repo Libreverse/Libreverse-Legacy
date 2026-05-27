@@ -10,19 +10,38 @@ inherit_mode:
 AllCops:
     NewCops: disable
     SuggestExtensions: false
+    # Application Ruby only (not vendor/bundle or hoisted gem trees on CI).
+    Include:
+        - "app/**/*.rb"
+        - "bin/**/*"
+        - "config/**/*.rb"
+        - "db/**/*.rb"
+        - "lib/**/*.rb"
+        - "plugins/**/*.rb"
+        - "scripts/**/*.rb"
+        - "spec/**/*.rb"
+        - "test/**/*.rb"
+        - "vendor/gems/**/*.rb"
+        - "Gemfile"
+        - "Rakefile"
     Exclude:
         - "data/**/*"
         - ".codeql/**/*"
         - "vendor/bundle/**/*"
+        - "vendor/gems/**/Gemfile"
         - "node_modules/**/*"
         - "tmp/**/*"
         - "log/**/*"
         - "coverage/**/*"
         - "storage/**/*"
+        - "react_on_rails/**/*"
+        - "_rails/**/*"
 
 # Enable key departments
 Bundler:
     Enabled: true
+    Include:
+        - "Gemfile"
 Gemspec:
     Enabled: false
 Layout:

@@ -93,7 +93,9 @@ jobs:
 
                   # Rubocop (Ruby)
                   if bundle exec rubocop -v >/dev/null 2>&1; then
-                    bundle exec rubocop -A --force-exclusion || true
+                    bundle exec rubocop -A --force-exclusion \
+                      app bin config db lib plugins scripts spec test vendor/gems \
+                      Gemfile Rakefile || true
                   fi
 
                   # Haml-lint (HAML)

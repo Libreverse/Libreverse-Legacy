@@ -215,7 +215,10 @@ jobs:
       - name: Run Rubocop
         if: matrix.tool == 'rubocop'
         shell: bash
-        run: bundle exec rubocop -A
+        run: >-
+          bundle exec rubocop -A --force-exclusion
+          app bin config db lib plugins scripts spec test vendor/gems
+          Gemfile Rakefile
 
       - name: Run haml-lint
         if: matrix.tool == 'haml-lint'
