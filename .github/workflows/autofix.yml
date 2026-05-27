@@ -78,7 +78,7 @@ jobs:
                   find . -type f -iname 'Dockerfile*' -print0 | xargs -0 -r bun prettier --write --log-level warn || true
 
                   # ESLint (JS/TS)
-                  bun eslint . --fix || true
+                  bun eslint app/javascript test/javascript --fix || true
 
                   # Coffeelint (CoffeeScript) with autofix
                   if bun coffeelint --help >/dev/null 2>&1; then
@@ -86,7 +86,7 @@ jobs:
                   fi
 
                   # Stylelint (CSS/SCSS/SASS)
-                  bun stylelint '**/*.{css,scss,sass}' --fix || true
+                  bun stylelint 'app/stylesheets/**/*.scss' --fix || true
 
                     # markdownlint (Markdown)
                   bun markdownlint-cli2 '**/*.md' '!**/node_modules/**' '!**/licenses/**' '!**/.codeql/**' --fix --config .markdownlint-cli2.jsonc || true

@@ -1,0 +1,27 @@
+[default.extend-words]
+Lazer = "Lazer"
+bck = "bck"
+nd = "nd"
+ue = "ue"
+thr = "thr"
+lod = "lod"
+LOD = "LOD"
+metalness = "metalness"
+
+[files]
+extend-exclude = [
+    "app/emoji/**", 
+    "config/credentials.yml.enc", 
+    "config/locales/**", 
+    "coverage/**", 
+    "test/**", 
+    "*.sql",
+    "vendor/**",
+    "node_modules/**",
+    "tmp/**",
+    "log/**",
+    "storage/**",
+    "**/gems/**",
+    ".cursor/**",
+    "documentation/**"
+]

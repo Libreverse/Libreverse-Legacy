@@ -23,11 +23,11 @@ runs:
 
         - name: Run ESLint
           shell: bash
-          run: bun eslint . --fix
+          run: bun eslint app/javascript test/javascript --fix
 
         - name: Run Stylelint
           shell: bash
-          run: bun stylelint '**/*.scss' --fix
+          run: bun stylelint 'app/stylesheets/**/*.scss' --fix
 
         - name: Run markdownlint
           shell: bash

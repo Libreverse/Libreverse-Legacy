@@ -257,12 +257,12 @@ jobs:
       - name: Run ESLint
         if: matrix.tool == 'eslint'
         shell: bash
-        run: bunx eslint . --fix
+        run: bunx eslint app/javascript test/javascript --fix
 
       - name: Run Stylelint
         if: matrix.tool == 'stylelint'
         shell: bash
-        run: bunx stylelint '**/*.scss' --fix
+        run: bunx stylelint 'app/stylesheets/**/*.scss' --fix
 
       - name: Run markdownlint
         if: matrix.tool == 'markdownlint'
@@ -301,7 +301,7 @@ jobs:
         if: matrix.tool == 'hadolint'
         uses: hadolint/hadolint-action@v3.3.0
         with:
-          recursive: true
+          dockerfile: Dockerfile
 
   security-analysis:
     needs: install

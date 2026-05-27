@@ -37,3 +37,6 @@ runs:
         - name: typos-action
           if: inputs.tool == 'typos'
           uses: crate-ci/typos@v1.33.1
+          with:
+              config: ./typos.toml
+              files: .
