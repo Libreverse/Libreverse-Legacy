@@ -37,6 +37,22 @@ class SystemAccountsTest < ActiveSupport::TestCase
     assert_nil reconciled.password_hash
   end
 
+  test "reconcile clears admin column when system_account is already true" do
+    account = Account.create!(
+      username: SystemAccounts::DEMO_EXPERIENCES_OWNER,
+      status: 2,
+      admin: true,
+      system_account: true
+    )
+
+    reconciled = SystemAccounts.find_or_create_demo_experiences_owner!
+
+    assert_equal account.id, reconciled.id
+    assert reconciled.system_account?
+    assert_not reconciled.read_attribute(:admin)
+    assert_not reconciled.admin?
+  end
+
   test "admin? is false for system accounts even when admin column is true" do
     account = Account.create!(
       username: "system-admin-flag-test",

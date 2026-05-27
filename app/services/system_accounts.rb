@@ -56,7 +56,8 @@ class SystemAccounts
     def reconcile_existing!(account, guest: false)
       updates = {}
       updates[:system_account] = true unless account.system_account?
-      updates[:admin] = false if account.admin?
+      # Use the DB column, not admin? — system accounts always report admin? as false.
+      updates[:admin] = false if account.read_attribute(:admin)
       updates[:guest] = guest if guest && !account.guest?
       updates[:password_hash] = nil if account.password_hash.present?
 

@@ -47,8 +47,8 @@ class LibreverseWebSocketP2P {
             const data = readSameOriginMessageData(event);
             if (!data) {
                 console.warn(
-                    "WebSocket P2P: Ignored message from untrusted origin:",
-                    event.origin,
+                    "WebSocket P2P: Ignored message with invalid payload (expected plain object):",
+                    event.data,
                 );
                 return;
             }
