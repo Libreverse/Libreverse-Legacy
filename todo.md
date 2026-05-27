@@ -1,11 +1,10 @@
 # To-do
 
-
-**You do manually (dashboards / org settings)**
+## Manual setup (dashboards / org settings)
 
 > These need your GitHub/Snyk/Socket account; I can't click them for you.
 
-### Manual Setup Steps
+### Manual setup steps
 
 | Step                  | What you do                                                                 | Where |
 |-----------------------|-----------------------------------------------------------------------------|-------|
@@ -24,9 +23,6 @@
 | **A8**                | Choose: disable socket-post-merge, weekly only, or fix App push            | Your policy call |
 
 ---
-
-
-
 
 solid cache has native encryption and compression which contain micro optimisations. We should use these native features over our own hacks.
 libreverse ai with api calls

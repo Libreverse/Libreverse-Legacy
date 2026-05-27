@@ -1,7 +1,8 @@
 {
     "config": {
         "MD007": false,
-        "MD013": false
+        "MD013": false,
+        "MD060": false
     },
     "fix": true,
     "gitignore": true,
@@ -12,9 +13,8 @@
         "app/**/*.md",
         "test/**/*.md",
         "plugins/**/*.md",
-        ".github/**/*.md",
-        ".windsurf/**/*.md",
-        "vendor/gems/**/*.md"
+        "!.github/copilot-instructions.md",
+        ".windsurf/**/*.md"
     ],
     "ignores": [
         "node_modules/",

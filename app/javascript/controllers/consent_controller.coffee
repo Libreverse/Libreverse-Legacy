@@ -10,7 +10,7 @@ export default class extends ApplicationController
   connect: ->
     super.connect()
     # Check if consent already given via cookie (for UI purposes)
-    if Cookies.get("consent_ui_preference") == "accepted"
+    if Cookies.get("consent_ui_preference") is "accepted"
       @hideConsentUI()
     return
 
@@ -58,7 +58,8 @@ export default class extends ApplicationController
   hideConsentUI: ->
     # Hide consent UI elements if already accepted
     consentElements = document.querySelectorAll('.consent-overlay, .consent-banner')
-    consentElements.forEach (el) -> el.style.display = 'none'
+    consentElements.forEach (el) =>
+      el.style.display = 'none'
 
   # Collect invisible captcha data from the current page
   getCaptchaData: ->

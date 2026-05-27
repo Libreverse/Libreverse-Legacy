@@ -1,9 +1,5 @@
 /* eslint-disable no-undef */
 // CommonJS setup for Jest to avoid ESM import parsing issues
-const { TextEncoder, TextDecoder } = require("node:util");
-globalThis.TextEncoder = TextEncoder;
-globalThis.TextDecoder = TextDecoder;
-
 // Import Jest DOM matchers
 require("@testing-library/jest-dom");
 

@@ -19,6 +19,7 @@ export default {
             "<rootDir>/test/javascript/utils/__mocks__/xmlrpc.js",
         "^y-webrtc$": "<rootDir>/test/javascript/__mocks__/y-webrtc.js",
     },
+    setupFiles: ["<rootDir>/test/javascript/setup-globals.cjs"],
     setupFilesAfterEnv: ["<rootDir>/test/javascript/setup.cjs"],
     testMatch: ["<rootDir>/test/javascript/**/*.test.js"],
     moduleFileExtensions: ["js", "json"],
