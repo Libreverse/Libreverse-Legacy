@@ -69,11 +69,6 @@ WORKDIR /home/app/webapp
 ## Copy Gemfile and Gemfile.lock first for efficient caching
 COPY Gemfile Gemfile.lock ./
 
-## Optional Socket Firewall for registry fetch blocking (CI: --secret id=socket_api_key)
-COPY scripts/docker-sfw-setup.sh /tmp/docker-sfw-setup.sh
-RUN --mount=type=secret,id=socket_api_key \
-    bash /tmp/docker-sfw-setup.sh
-
 ## Copy bundler plugins (required for bundle install)
 COPY plugins/ plugins/
 
@@ -102,17 +97,17 @@ RUN set -eux; \
 RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
     && rvm --default use "$RUBY_VER" \
     && bundle config set without "development test" \
-    && if command -v sfw >/dev/null 2>&1; then sfw bundle install --jobs=$(nproc) --retry 3 --verbose; else bundle install --jobs=$(nproc) --retry 3 --verbose; fi \
+    && bundle install --jobs=$(nproc) --retry 3 --verbose \
     && bundle info google_robotstxt_parser \
     && ruby -e "require \"bundler/setup\"; require \"google_robotstxt_parser\"; puts(\"Robotstxt loaded: #{!!defined?(Robotstxt)}\")"'
 
-# Copy package.json and bun.lock for JS dependencies
-COPY package.json bun.lock ./
+# Copy package.json, bun.lock, and bunfig (Socket install scanner) for JS dependencies
+COPY package.json bun.lock bunfig.toml ./
 
 # Install Bun (for JS package management and build only)
 ENV BUN_INSTALL=/usr/local/bun
 ENV PATH=/usr/local/bun/bin:$PATH
-RUN curl -fsSL https://bun.sh/install | bash -s -- "bun-v1.2.5"
+RUN curl -fsSL https://bun.sh/install | bash -s -- "bun-v1.3.14"
 
 # Copy the rest of the application code (including vendor/)
 COPY . .
@@ -121,7 +116,7 @@ COPY . .
 RUN chown -R app:app /home/app/webapp
 
 # Now install JS dependencies (vendor/javascript/p2p should exist)
-RUN if command -v sfw >/dev/null 2>&1; then sfw bun install --frozen-lockfile; else bun install --frozen-lockfile; fi
+RUN bun install --frozen-lockfile
 
 # Copy npm-provided CSS files that comfortable_media_surfer imports via Sprockets.
 # vendor/assets is always in Sprockets' default load path, so this satisfies the

@@ -95,7 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${SOCKET_API_KEY:-}" ]; then
-            echo "::warning::SOCKET_API_KEY not set — PR delta scan skipped. Add the secret for full firewall coverage."
+            echo "::warning::SOCKET_API_KEY not set — PR delta scan skipped."
             exit 0
           fi
           pip install socketsecurity --upgrade
@@ -111,6 +111,27 @@ jobs:
           done
           bun scripts/socket-policy-filter.mjs socket-results.sarif
 
+      - name: Snyk Open Source (PR)
+        if: github.event_name == 'pull_request'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG: ${{ secrets.SNYK_ORG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SNYK_TOKEN:-}" ]; then
+            echo "::warning::SNYK_TOKEN not set — skipping Snyk"
+            exit 0
+          fi
+          curl -fsSL https://static.snyk.io/cli/latest/snyk-linux -o snyk
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/snyk
+          snyk auth "$SNYK_TOKEN"
+          args=(test --all-projects --severity-threshold=high)
+          if [ -n "${SNYK_ORG:-}" ]; then
+            args+=(--org="$SNYK_ORG")
+          fi
+          snyk "${args[@]}"
+
   install:
     name: Install dependencies
     needs: gates
@@ -118,17 +139,12 @@ jobs:
     permissions:
       contents: read
     env:
+      # Optional: org policy for @socketsecurity/bun-security-scanner (bunfig.toml)
       SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: ./.github/actions/install-dependencies
-        if: env.SOCKET_API_KEY != ''
-        with:
-          socket-token: ${{ env.SOCKET_API_KEY }}
-
       - uses: ./.github/actions/setup-environment
-        if: env.SOCKET_API_KEY == ''
         with:
           skip-install: "false"
           use-socket-firewall: "false"
@@ -147,13 +163,11 @@ jobs:
             ~/.bun
           key: deps-${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
 
-      - name: Upload dependencies for downstream jobs
+      - name: Upload node_modules for downstream jobs
         uses: actions/upload-artifact@v4
         with:
           name: ci-deps-${{ github.run_id }}
-          path: |
-            vendor/bundle
-            node_modules
+          path: node_modules
           if-no-files-found: error
           retention-days: 1
 
@@ -185,8 +199,6 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
-        env:
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Prettier
         if: matrix.tool == 'prettier'
@@ -275,8 +287,6 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
-        env:
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run i18n validation
         if: matrix.tool == 'i18n-validation'
@@ -312,8 +322,6 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
-        env:
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Security Analysis
         uses: ./.github/actions/security-analysis
@@ -337,8 +345,6 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
-        env:
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Code Quality Analysis
         uses: ./.github/actions/code-quality
@@ -367,8 +373,6 @@ jobs:
 
       - name: Restore dependencies
         uses: ./.github/actions/restore-dependencies
-        env:
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
 
       - name: Run Tests
         uses: ./.github/actions/run-tests
@@ -443,14 +447,32 @@ jobs:
           TIDB_HOST: ${{ secrets.TIDB_HOST }}
           TIDB_USERNAME: ${{ secrets.TIDB_USERNAME }}
           TIDB_PASSWORD: ${{ secrets.TIDB_PASSWORD }}
-          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
         run: |
           docker build \
             --secret id=tidb_host,env=TIDB_HOST \
             --secret id=tidb_username,env=TIDB_USERNAME \
             --secret id=tidb_password,env=TIDB_PASSWORD \
-            --secret id=socket_api_key,env=SOCKET_API_KEY \
             -t quay.io/georgebaskervil/libreverse:legacy .
+
+      - name: Snyk container test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG: ${{ secrets.SNYK_ORG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SNYK_TOKEN:-}" ]; then
+            echo "::warning::SNYK_TOKEN not set — skipping container scan"
+            exit 0
+          fi
+          curl -fsSL https://static.snyk.io/cli/latest/snyk-linux -o snyk
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/snyk
+          snyk auth "$SNYK_TOKEN"
+          args=(container test quay.io/georgebaskervil/libreverse:legacy --severity-threshold=high)
+          if [ -n "${SNYK_ORG:-}" ]; then
+            args+=(--org="$SNYK_ORG")
+          fi
+          snyk "${args[@]}"
 
       - name: Push to Quay.io
         run: docker push quay.io/georgebaskervil/libreverse:legacy

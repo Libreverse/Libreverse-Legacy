@@ -1,8 +1,9 @@
 name: Socket post-merge baseline
 
+# Quota-conscious: no scan on every push. Run manually or weekly.
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: "0 8 * * 0"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +12,6 @@ permissions:
 
 jobs:
   post-merge-scan:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-22.04
     env:
       SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
@@ -69,24 +69,3 @@ jobs:
           git diff --staged --quiet && exit 0
           git commit -m "chore(socket): update post-merge baseline"
           git push origin main
-
-      - uses: actions/create-github-app-token@v3
-        if: failure()
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Auto-revert on new blockers
-        if: failure() && contains(github.event.head_commit.message, 'dependabot')
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git revert --no-edit HEAD
-          git push origin main
-          gh issue create --title "dependabot-paused: post-merge Socket regression" \
-            --body "Auto-reverted ${{ github.sha }} due to new Socket blockers. See workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}."
-          gh label create dependabot-paused --color B60205 --description "Autonomous rolling halted" 2>/dev/null || true
