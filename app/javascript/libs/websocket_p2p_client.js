@@ -106,9 +106,9 @@ class LibreverseWebSocketP2P {
                             : !!defaults.webrtc;
                     const cfgIce = Array.isArray(defaults.iceServers)
                         ? defaults.iceServers
-                        : Array.isArray(defaults.ice_servers)
+                        : (Array.isArray(defaults.ice_servers)
                           ? defaults.ice_servers
-                          : undefined;
+                          : undefined);
                     const documentOptions = { mode, webrtc };
                     if (Array.isArray(cfgIce))
                         documentOptions.iceServers =
@@ -305,9 +305,9 @@ class LibreverseWebSocketP2P {
             );
         const userIce = Array.isArray(options.iceServers)
             ? options.iceServers
-            : Array.isArray(options.ice_servers)
+            : (Array.isArray(options.ice_servers)
               ? options.ice_servers
-              : undefined;
+              : undefined);
         if (Array.isArray(userIce))
             next.iceServers = this._normalizeIceServers(userIce);
         this.docConfigs.set(documentId, next);
