@@ -55,11 +55,13 @@ jobs:
           bundler-cache: false
 
       - name: Delta age gate (npm)
+        if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ steps.base.outputs.ref }}
         run: bun scripts/bun-age-gate-delta.mjs
 
       - name: Delta age gate (gems)
+        if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ steps.base.outputs.ref }}
         run: ruby scripts/gem-age-gate-delta.rb
