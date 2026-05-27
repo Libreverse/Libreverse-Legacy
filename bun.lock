@@ -85,7 +85,6 @@
         "@babel/preset-env": "7.26.9",
         "@coffeelint/cli": "^5.2.11",
         "@eslint/js": "^9.36.0",
-        "@socketsecurity/bun-security-scanner": "^1.1.2",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^6.8.0",
         "acorn": "^8.15.0",
@@ -847,8 +846,6 @@
     "@sinonjs/commons": ["@sinonjs/commons@3.0.1", "", { "dependencies": { "type-detect": "4.0.8" } }, "sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ=="],
 
     "@sinonjs/fake-timers": ["@sinonjs/fake-timers@10.3.0", "", { "dependencies": { "@sinonjs/commons": "^3.0.0" } }, "sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA=="],
-
-    "@socketsecurity/bun-security-scanner": ["@socketsecurity/bun-security-scanner@1.1.2", "", {}, "sha512-TdsAg6SMolubyZ6HfIjLWlANfHvhV6i7pdWof4OQ33zPEwXJm2ilA755levHMR618MKq22+06Ag8efiVKowxqA=="],
 
     "@sxwjs/sxwjs": ["@sxwjs/sxwjs@4.0.0", "", {}, "sha512-hCGn3U3snvq58dlQmimYh03xp1kzrV/ArTbIn9hTJH1vnyflGWJBfiLXfgg3MS+5tFvkAEks3QMN86jpHbI6rA=="],
 

@@ -1,5 +1,33 @@
 # To-do
 
+
+**You do manually (dashboards / org settings)**
+
+> These need your GitHub/Snyk/Socket account; I can't click them for you.
+
+### Manual Setup Steps
+
+| Step                  | What you do                                                                 | Where |
+|-----------------------|-----------------------------------------------------------------------------|-------|
+| **Secrets**           | Create/update repo secrets (see table below)                                | GitHub → Settings → Secrets and variables → **Actions** |
+| **Repo variables**    | Set `TIDB_INSTANCE_AVAILABLE`, later `AUTODEP_MERGE_ENABLED`               | Same → **Variables** tab |
+| **Snyk org**          | Create/link org, import Libreverse-Legacy, get auth token                   | snyk.io |
+| **Socket API key**    | Confirm key exists, scope includes packages (if you want Bun scanner org mode + CLI) | Socket dashboard |
+| **GitHub App**        | App installed on repo; ruleset bypass so the app can push to main (autofix, optional baseline) | GitHub → Settings → **Apps** / **Rulesets** |
+| **Branch protection** | Required checks: Dependency gates, Install dependencies, Verify (aggregate); no required human reviewers | Settings → **Branches** → **main** |
+| **Dependabot**        | Leave enabled (already in repo)                                             | Settings → **Code security** |
+| **Optional: Socket GitHub App** | Install if you want PR comments (uses quota separately from CLI)     | socket.dev / GitHub marketplace |
+| **Optional: Snyk GitHub integration** | Instead of CLI-only — avoid double-scanning same PR               | Snyk → **Integrations** |
+| **D2 (~June)**        | Restart TiDB Serverless; set `TIDB_INSTANCE_AVAILABLE=true`                | TiDB Cloud + GitHub variable |
+| **C2**                | Flip `AUTODEP_MERGE_ENABLED=true` only after one green Dependabot PR       | Variables — your call when ready |
+| **C5**                | `AUTODEP_MAJOR_MERGE_ENABLED=true` when you trust major rules              | Variables — optional |
+| **A8**                | Choose: disable socket-post-merge, weekly only, or fix App push            | Your policy call |
+
+---
+
+
+
+
 solid cache has native encryption and compression which contain micro optimisations. We should use these native features over our own hacks.
 libreverse ai with api calls
 adopt cucumber rails for future tests

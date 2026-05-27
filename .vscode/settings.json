@@ -9,5 +9,7 @@
     "git.fetchTags": false,
     // Auto-fetch periodically to keep things fresh
     "git.autofetch": true,
-    "sarif-viewer.connectToGithubCodeScanning": "on"
+    "sarif-viewer.connectToGithubCodeScanning": "on",
+    "snyk.advanced.autoSelectOrganization": true,
+    "snyk.advanced.organization": "eb5b73e8-84e3-474f-915c-fd9f91fce1c3"
 }

@@ -1,6 +1,2 @@
 # Bun configuration
 # Package age enforcement: package.json preinstall → scripts/bun-age-gate.mjs
-# Install-time supply-chain scan: Socket Bun scanner (free mode without SOCKET_API_KEY)
-
-[install.security]
-scanner = "@socketsecurity/bun-security-scanner"

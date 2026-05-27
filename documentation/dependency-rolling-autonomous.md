@@ -80,23 +80,19 @@ Two vendors, one boundary: **merge gates**, not install-time blocking for gems/B
 | SAST (app code) | **CodeQL** (GitHub), **brakeman**, optional **Snyk Code** | Custom code issues | Snyk Code **100/month** — weekly or PR-label, not every commit |
 | Container | **Snyk Container** | Image before/after deploy | **100/month** — only in `build-push` when deploy runs |
 | IaC | **Snyk IaC** | If infra manifests exist in repo | **300/month** — low priority unless needed |
-| Local + CI **Bun install** | **`@socketsecurity/bun-security-scanner`** in `bunfig.toml` | Scan each package during `bun install` / `bun add` (Bun ≥ 1.3) | Free mode without API key; optional `SOCKET_API_KEY` (`packages` scope) for org policy |
-| Local proactive (other PMs) | **Socket Firewall Free** (`sfw`) | `sfw npm` / `sfw pip` / etc. | Not used for Bun in this repo — use Bun scanner instead |
+| Local proactive (supported PMs) | **Socket Firewall Free** (`sfw`) | `sfw npm` / `sfw pip` / etc. | Optional local use; not used in CI |
 | **Ruby gems** | Age gate + `bundle-audit` + Snyk OS | No Free install-time wrapper for `bundle` | Accept residual risk or Enterprise `sfw bundle` later |
-| Install in CI | Plain `bundle` + `bun` (Bun picks up scanner from `bunfig.toml`) | After gates pass | No Enterprise `sfw` |
+| Install in CI | Plain `bundle` + `bun` | After gates pass | No Enterprise `sfw`; no Bun scanner (quota) |
 
-### Socket: four mechanisms (do not confuse)
+### Socket mechanisms (do not confuse)
 
 | Mechanism | Tier here | Use in this repo |
 |-----------|-----------|------------------|
-| **Bun security scanner** (`@socketsecurity/bun-security-scanner`) | Free (public API) or API key | **Enabled** — `[install.security]` in `bunfig.toml`; requires Bun ≥ 1.3 |
 | **Firewall Free** (`sfw` CLI) | Local npm/pip/cargo | Optional elsewhere; **not** used for Bun installs here |
 | **Firewall Enterprise** (`sfw bundle` / `sfw bun`, `firewall-enterprise` action) | **Not licensed** | **Remove** from CI install, Docker, and `install-dependencies` action |
 | **CLI / GitHub App** (`socketcli`, API key) | Free (limited scans) | **Keep** — PR delta in `gates` job; optional App for PR comments |
 
-**Why Bun install-time scan without Ruby:** npm/JS is a larger malware target and this repo carries far more JS transitive deps (~1.3k resolved in `bun.lock`) than gems (~hundreds in `Gemfile.lock`). Gems still rely on delta age gate + `bundle-audit` + Snyk on PRs.
-
-The Bun scanner is **not** `sfw bun` (Enterprise). It hooks [Bun’s Security Scanner API](https://bun.com/docs/pm/security-scanner-api) and blocks/warns on supply-chain signals during install — complementary to `socketcli` on PRs (which does not replace `bun audit` / CVE tools).
+Install-time Bun scanner was tested and removed due free-tier quota/rate-limit pressure. Merge-time gates remain the primary boundary: age gates + Socket PR delta + Snyk + verify.
 
 ### What free tiers do **not** cover
 
@@ -378,9 +374,8 @@ Expect **monthly digests** and **rare halt alerts**, not per-PR notifications.
 | `.github/actions/setup-environment` | Plain install | **Yes — default install path** |
 | `.github/actions/install-dependencies` | Enterprise `sfw` only | **Remove or stop using** |
 | `.github/actions/socket-firewall` | Enterprise action | **Remove from CI** or `firewall-free` only for npm |
-| `.sfw.config` | Enterprise-style | Unused in CI; Bun uses `bunfig.toml` scanner |
-| `bunfig.toml` `[install.security]` | Socket Bun scanner | Yes |
-| `@socketsecurity/bun-security-scanner` | Bun install-time scan | Yes (devDependency) |
+| `.sfw.config` | Enterprise-style | Unused in CI |
+| `bunfig.toml` | Bun config + age-gate notes | Yes |
 | `scripts/docker-sfw-setup.sh` | Enterprise in Docker | Remove or skip unless upgraded |
 | CodeQL / brakeman / audits | App + dep security | Yes |
 
@@ -409,14 +404,14 @@ Work through in order. Check off in PRs or project board as completed.
 
 - [x] **A1.** Stop using Enterprise Socket on install: always `setup-environment` with `use-socket-firewall: false`; removed `install-dependencies`.
 - [x] **A2.** Keep `SOCKET_API_KEY` for **gates** `socketcli` only (`pull_request`); Python 3.12 on that step.
-- [x] **A3b.** Enable **`@socketsecurity/bun-security-scanner`** — Bun ≥ 1.3.14, `bunfig.toml` `[install.security]`, devDependency.
-- [x] **A3.** `.sfw.config` disabled; Bun scanner in `bunfig.toml`.
+- [x] **A3b.** Evaluated Bun scanner; removed from CI/local default due free-tier quota limits.
+- [x] **A3.** `.sfw.config` disabled; no install-time Socket wrapper in CI.
 - [x] **A4.** Removed Enterprise `sfw` from Docker build; CI install uses plain bundle/bun.
 - [x] **A5.** Snyk `test --all-projects` in **gates** on PRs (`SNYK_TOKEN`, `SNYK_ORG`).
 - [x] **A6.** Snyk Container in `build-push` when deploy runs (TIDB on).
 - [ ] **A7.** Optional: weekly `snyk code test` workflow (100 tests/month).
 - [x] **A8.** **socket-post-merge**: weekly cron + `workflow_dispatch` only (no push).
-- [x] **A9.** Merge boundary = gates + verify; Bun install-time via scanner, not Enterprise `sfw`.
+- [x] **A9.** Merge boundary = gates + verify; no install-time Socket wrapper in CI.
 
 ### B. CI plumbing (keep, fix known failures)
 
