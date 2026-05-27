@@ -3,7 +3,9 @@
     const TRUSTED_MESSAGE_ORIGIN = globalThis.location.origin;
 
     function isTrustedMessage(event) {
-        return Boolean(event?.origin) && event.origin === TRUSTED_MESSAGE_ORIGIN;
+        return (
+            Boolean(event?.origin) && event.origin === TRUSTED_MESSAGE_ORIGIN
+        );
     }
 
     function addTrustedMessageListener(handler) {
@@ -13,8 +15,7 @@
         };
 
         globalThis.addEventListener("message", wrappedListener);
-        return () =>
-            globalThis.removeEventListener("message", wrappedListener);
+        return () => globalThis.removeEventListener("message", wrappedListener);
     }
 
     // Store original keyboard lock methods

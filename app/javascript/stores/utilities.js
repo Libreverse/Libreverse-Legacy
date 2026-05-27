@@ -9,11 +9,7 @@ import {
     searchStore,
 } from "../stores";
 
-const UNSAFE_PROPERTY_KEYS = new Set([
-    "__proto__",
-    "constructor",
-    "prototype",
-]);
+const UNSAFE_PROPERTY_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 function isPlainObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);

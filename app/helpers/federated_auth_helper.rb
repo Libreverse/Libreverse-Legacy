@@ -44,11 +44,11 @@ module FederatedAuthHelper
   def register_dynamic_client(registration_endpoint, redirect_uri, oidc_domain:)
     parsed_endpoint = parse_trusted_registration_endpoint(
       registration_endpoint,
-      oidc_domain,
+      oidc_domain
     )
     unless parsed_endpoint
       Rails.logger.error(
-        "Registration endpoint not allowed for #{oidc_domain}: #{registration_endpoint}",
+        "Registration endpoint not allowed for #{oidc_domain}: #{registration_endpoint}"
       )
       return { error: "Invalid registration endpoint" }
     end

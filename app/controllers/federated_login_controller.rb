@@ -34,7 +34,7 @@ class FederatedLoginController < ApplicationController
     client_data = register_dynamic_client(
       registration_endpoint,
       redirect_uri,
-      oidc_domain: domain,
+      oidc_domain: domain
     )
 
     unless client_data

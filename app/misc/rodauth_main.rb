@@ -456,9 +456,7 @@ class RodauthMain < Rodauth::Rails::Auth
 
       # Validate username for inappropriate content
       username = param(login_param)
-      if username.present? && SystemAccounts::RESERVED_USERNAMES.include?(username)
-        throw_error_status(422, login_param, "is reserved for internal use and cannot be registered")
-      end
+      throw_error_status(422, login_param, "is reserved for internal use and cannot be registered") if username.present? && SystemAccounts::RESERVED_USERNAMES.include?(username)
 
       if username.present? && ModerationService.contains_inappropriate_content?(username)
         violations = ModerationService.get_violation_details(username)
