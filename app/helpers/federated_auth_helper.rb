@@ -41,17 +41,16 @@ module FederatedAuthHelper
     nil
   end
 
-  def register_dynamic_client(registration_endpoint, redirect_uri)
-    # Validate the registration endpoint URL
-    begin
-      parsed_endpoint = URI.parse(registration_endpoint)
-      unless parsed_endpoint.scheme == "https" && !parsed_endpoint.host.nil?
-        Rails.logger.error "Invalid registration endpoint: #{registration_endpoint}"
-        return { error: "Invalid registration endpoint" }
-      end
-    rescue URI::InvalidURIError
-      Rails.logger.error "Malformed registration endpoint URL: #{registration_endpoint}"
-      return { error: "Malformed registration endpoint URL" }
+  def register_dynamic_client(registration_endpoint, redirect_uri, oidc_domain:)
+    parsed_endpoint = parse_trusted_registration_endpoint(
+      registration_endpoint,
+      oidc_domain,
+    )
+    unless parsed_endpoint
+      Rails.logger.error(
+        "Registration endpoint not allowed for #{oidc_domain}: #{registration_endpoint}",
+      )
+      return { error: "Invalid registration endpoint" }
     end
 
     client_data = {
@@ -63,7 +62,7 @@ module FederatedAuthHelper
       application_type: "web"
     }
 
-    response = HTTParty.post(registration_endpoint,
+    response = HTTParty.post(parsed_endpoint.to_s,
                              body: client_data.to_json,
                              headers: {
                                "Content-Type" => "application/json",
@@ -102,15 +101,35 @@ module FederatedAuthHelper
 
   private
 
+  def parse_trusted_registration_endpoint(url, oidc_domain)
+    return nil unless valid_federated_domain?(oidc_domain)
+
+    parsed = URI.parse(url)
+    return nil unless parsed.is_a?(URI::HTTPS)
+    return nil if parsed.host.blank?
+    return nil if blocked_federated_host?(parsed.host)
+    return nil unless registration_host_matches_domain?(parsed.host, oidc_domain)
+
+    parsed
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def registration_host_matches_domain?(host, oidc_domain)
+    host.casecmp?(oidc_domain)
+  end
+
   def valid_federated_domain?(domain)
     return false if domain.blank?
+    return false if blocked_federated_host?(domain)
 
-    # Prevent localhost and private IPs
-    return false if domain.match?(/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/i)
+    domain.match?(/\A[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\z/)
+  end
 
-    # Basic domain validation
-    return false unless domain.match?(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+  def blocked_federated_host?(host)
+    return true if host.blank?
 
-    true
+    host.match?(/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/i) ||
+      host.match?(/\A\d{1,3}(?:\.\d{1,3}){3}\z/)
   end
 end

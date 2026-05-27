@@ -1,4 +1,5 @@
 import consumer from "./consumer";
+import CookieUtils from "../libs/cookies.js";
 
 // Subscribe to system notifications
 const systemNotificationChannel = consumer.subscriptions.create(
@@ -37,15 +38,8 @@ const systemNotificationChannel = consumer.subscriptions.create(
 
             sessionStorage.setItem("clearing_cookies", "true");
 
-            // Clear all cookies for this domain
-            const cookies = document.cookie.split(";");
-            for (const c of cookies) {
-                document.cookie = c
-                    .replace(/^ +/, "")
-                    .replace(
-                        /=.*/,
-                        "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/",
-                    );
+            for (const name of Object.keys(CookieUtils.getAll())) {
+                CookieUtils.remove(name, { path: "/", secure: true });
             }
 
             console.log("Cookies cleared, reloading page...");

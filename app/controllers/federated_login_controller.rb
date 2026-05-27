@@ -31,7 +31,11 @@ class FederatedLoginController < ApplicationController
 
     # Register as an OAuth client
     redirect_uri = "https://#{LibreverseInstance::Application.instance_domain}/auth/federated/callback"
-    client_data = register_dynamic_client(registration_endpoint, redirect_uri)
+    client_data = register_dynamic_client(
+      registration_endpoint,
+      redirect_uri,
+      oidc_domain: domain,
+    )
 
     unless client_data
       flash[:error] = "Failed to register with #{domain}. Please try again."

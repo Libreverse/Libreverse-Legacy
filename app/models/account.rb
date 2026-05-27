@@ -58,9 +58,13 @@ class Account < ApplicationRecord
         guest == true
       end
 
-      # Determines if the account is an admin
+      def system_account?
+        system_account == true
+      end
+
+      # System accounts own automated content; they must never act as admins.
       def admin?
-        admin == true
+        admin == true && !system_account?
       end
 
       # Role-based authentication helpers

@@ -57,6 +57,13 @@ Performance:
 Rails:
     Enabled: true
     TargetRailsVersion: 8.0.2
+
+# Standalone scripts run without ActiveSupport (Time.current / Time.zone unavailable).
+Rails/TimeZone:
+    Exclude:
+        - "scripts/gem-age-gate.rb"
+        - "scripts/gem-age-gate-delta.rb"
+
 Security:
     Enabled: false # Disabled globally; only CompoundHash enabled below
 Style:

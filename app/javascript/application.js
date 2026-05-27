@@ -5,7 +5,11 @@ import "./libs/foundation.js";
 import "./libs/websocket_p2p_frame.coffee";
 import "what-input";
 import { load } from "@fingerprintjs/botd";
-import "./libs/cookies.js";
+import CookieUtils from "./libs/cookies.js";
+import {
+    addSameOriginMessageListener,
+    readSameOriginMessageData,
+} from "./libs/trusted_post_message.js";
 import "./thredded/thredded_imports.js.erb";
 
 // GDPR-Compliant Error Tracking Setup
@@ -72,16 +76,12 @@ const BOTD_TTL_MIN = 60; // Cookie lifetime
     load()
         .then((agent) => agent.detect())
         .then(({ bot }) => {
-            const expires = new Date(
-                Date.now() + BOTD_TTL_MIN * 60_000,
-            ).toUTCString();
-            document.cookie = [
-                `${BOTD_COOKIE}=${bot ? 1 : 0}`,
-                `expires=${expires}`,
-                "path=/",
-                "SameSite=Lax", // add 'Secure' if your site is HTTPS-only
-                globalThis.location.protocol === "https:" ? "Secure" : "",
-            ].join("; ");
+            CookieUtils.set(BOTD_COOKIE, bot ? "1" : "0", {
+                expires: new Date(Date.now() + BOTD_TTL_MIN * 60_000),
+                path: "/",
+                sameSite: "lax",
+                secure: true,
+            });
         })
         .catch((error) => {
             /* Detection failed – leave cookie unset so the backend can flag it */
@@ -176,11 +176,8 @@ function handleInvalidSession() {
     sessionStorage.setItem("clearing_cookies", "true");
 
     // Clear all cookies
-    const cookies = document.cookie.split(";");
-    for (const c of cookies) {
-        document.cookie = c
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/");
+    for (const name of Object.keys(CookieUtils.getAll())) {
+        CookieUtils.remove(name, { path: "/", secure: true });
     }
 
     // Reload the page
@@ -192,35 +189,30 @@ document.addEventListener("DOMContentLoaded", checkForCookieClearHeaders);
 
 // Parent-side keyboard lock handler for iframes
 (function () {
-    // Listen for keyboard lock requests from iframes
-    globalThis.addEventListener("message", (event) => {
-        // Verify origin for security
-        if (event.origin !== globalThis.location.origin) {
-            return;
-        }
-        if (event.data.type === "keyboard-lock-request") {
-            // Check if we have keyboard API available
+    addSameOriginMessageListener((event) => {
+        const data = readSameOriginMessageData(event);
+        if (!data) return;
+
+        if (data.type === "keyboard-lock-request") {
             if (navigator.keyboard && navigator.keyboard.lock) {
                 try {
                     navigator.keyboard
-                        .lock(event.data.keyCodes)
+                        .lock(data.keyCodes)
                         .then(() => {
-                            // Send success response to iframe
                             event.source.postMessage(
                                 {
                                     type: "keyboard-lock-response",
-                                    messageId: event.data.messageId,
+                                    messageId: data.messageId,
                                     success: true,
                                 },
                                 event.origin,
                             );
                         })
                         .catch((error) => {
-                            // Send error response to iframe
                             event.source.postMessage(
                                 {
                                     type: "keyboard-lock-response",
-                                    messageId: event.data.messageId,
+                                    messageId: data.messageId,
                                     success: false,
                                     error: error.message,
                                 },
@@ -231,7 +223,7 @@ document.addEventListener("DOMContentLoaded", checkForCookieClearHeaders);
                     event.source.postMessage(
                         {
                             type: "keyboard-lock-response",
-                            messageId: event.data.messageId,
+                            messageId: data.messageId,
                             success: false,
                             error: error.message,
                         },
@@ -239,11 +231,10 @@ document.addEventListener("DOMContentLoaded", checkForCookieClearHeaders);
                     );
                 }
             } else {
-                // Keyboard API not available
                 event.source.postMessage(
                     {
                         type: "keyboard-lock-response",
-                        messageId: event.data.messageId,
+                        messageId: data.messageId,
                         success: false,
                         error: "Keyboard API not supported",
                     },
@@ -251,7 +242,7 @@ document.addEventListener("DOMContentLoaded", checkForCookieClearHeaders);
                 );
             }
         } else if (
-            event.data.type === "keyboard-unlock-request" && // Handle unlock requests
+            data.type === "keyboard-unlock-request" &&
             navigator.keyboard &&
             navigator.keyboard.unlock
         ) {

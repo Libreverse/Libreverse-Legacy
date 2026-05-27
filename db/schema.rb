@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_21_183000) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_27_220000) do
   create_table "account_active_session_keys", id: false, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "session_id", null: false
@@ -74,10 +74,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_21_183000) do
     t.string "federated_id"
     t.string "provider"
     t.string "provider_uid"
+    t.boolean "system_account", default: false, null: false
     t.index ["admin"], name: "index_accounts_on_admin"
     t.index ["federated_id"], name: "index_accounts_on_federated_id"
     t.index ["guest", "created_at"], name: "index_accounts_on_guest_and_created_at"
     t.index ["provider", "provider_uid"], name: "index_accounts_on_provider_and_provider_uid", unique: true
+    t.index ["system_account"], name: "index_accounts_on_system_account"
     t.index ["username"], name: "index_accounts_on_username", unique: true
   end
 

@@ -456,6 +456,10 @@ class RodauthMain < Rodauth::Rails::Auth
 
       # Validate username for inappropriate content
       username = param(login_param)
+      if username.present? && SystemAccounts::RESERVED_USERNAMES.include?(username)
+        throw_error_status(422, login_param, "is reserved for internal use and cannot be registered")
+      end
+
       if username.present? && ModerationService.contains_inappropriate_content?(username)
         violations = ModerationService.get_violation_details(username)
 
@@ -525,6 +529,18 @@ class RodauthMain < Rodauth::Rails::Auth
 
     before_login do
       Rails.logger.info "DEBUG: Entered before_login hook"
+    end
+
+    # Block sign-in for internal system ownership accounts (no password, not humans).
+    before_login do
+      username = param(login_param)
+      next if username.blank?
+
+      account = Account.find_by(username: username)
+      next unless account&.system_account?
+
+      set_error_flash "This account is reserved for internal use and cannot be used to sign in."
+      throw :rodauth_halt
     end
 
     # Argon2 cost already configured globally

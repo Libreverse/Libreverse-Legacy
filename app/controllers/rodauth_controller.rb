@@ -164,8 +164,7 @@ class RodauthController < ApplicationController
         default: "Security validation failed. Please ensure JavaScript is enabled and try again.")
     end
 
-    # For Rodauth controllers, redirect to the current route
-    redirect_to request.path
+    redirect_to rodauth_retry_path
   end
 
   # Manual invisible captcha validation
@@ -281,8 +280,26 @@ class RodauthController < ApplicationController
 
   # Redirect to safe location for auth routes
   def redirect_to_safe_location_for_auth
-    safe_path = request.referer&.start_with?(request.base_url) ? request.referer : root_path
-    redirect_to safe_path
+    redirect_to rodauth_retry_path
+  end
+
+  def rodauth_retry_path
+    return rodauth.login_path unless rodauth.respond_to?(:current_route)
+
+    case rodauth.current_route
+    when :create_account
+      rodauth.create_account_path
+    when :change_password
+      rodauth.change_password_path
+    when :reset_password
+      if rodauth.respond_to?(:reset_password_request_path)
+        rodauth.reset_password_request_path
+      else
+        rodauth.login_path
+      end
+    else
+      rodauth.login_path
+    end
   end
 
 =begin

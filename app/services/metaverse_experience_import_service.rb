@@ -132,19 +132,6 @@ class MetaverseExperienceImportService
   end
 
   def find_or_create_system_account
-    # Look for existing system account
-    system_account = Account.find_by(username: "metaverse-system")
-
-    return system_account if system_account
-
-    # Create system account for metaverse content
-    Account.create!(
-      username: "metaverse-system",
-      admin: true, # System account should be admin
-      status: 2 # verified status
-    )
-  rescue ActiveRecord::RecordInvalid => e
-    # If creation fails, try to find any admin account as fallback
-    Account.where(admin: true).first || raise(e)
+    SystemAccounts.find_or_create_metaverse_import_owner!
   end
 end

@@ -104,21 +104,6 @@ class ExperiencesController < ApplicationController
     # Canonicalize: ensure slug in URL for SEO/back-compat
     return redirect_to display_experience_path(@experience), status: :moved_permanently if params[:id].to_s == @experience.id.to_s && @experience.slug.present?
 
-    # Handle both local experiences and federated experience URIs
-    if params[:federated_uri].present?
-      # This is a federated experience - validate and redirect to the original instance
-      validated_uri = validate_and_sanitize_federated_uri(params[:federated_uri])
-
-      if validated_uri.nil?
-        redirect_to experiences_path, alert: "Invalid federated URI."
-        return
-      end
-
-      # Use a safe redirect with validated URI
-      redirect_to_safe_uri(validated_uri)
-      return
-    end
-
     # Handle local experience
     unless @experience.approved? || current_account&.admin? || @experience.account_id == current_account&.id
       redirect_to experiences_path, alert: "Experience is awaiting approval."
@@ -217,68 +202,6 @@ class ExperiencesController < ApplicationController
       return false
     end
     true
-  end
-
-  def validate_and_sanitize_federated_uri(uri)
-      parsed_uri = URI.parse(uri)
-
-      # Only allow HTTPS
-      return nil unless parsed_uri.scheme == "https"
-
-      # Check if the domain is in our allowed federated instances
-      # You can customize this logic based on your federation setup
-      allowed_domains = Rails.application.config.federation&.dig(:allowed_domains) || []
-
-      # If no specific domains are configured, disallow to prevent open redirect
-      if allowed_domains.empty?
-        Rails.logger.warn "Federated redirect attempted but no allowed domains configured"
-        return nil
-      end
-
-      # Check against allowed domains
-      allowed_domains.include?(parsed_uri.host) ? uri : nil
-  rescue URI::InvalidURIError
-      nil
-  end
-
-  def redirect_to_safe_uri(uri)
-    # This method exists specifically to satisfy Brakeman's security requirements
-    # The URI has been validated by validate_and_sanitize_federated_uri
-
-    # Additional validation before redirect
-    validated_uri = validate_and_sanitize_federated_uri(uri)
-    if validated_uri.nil?
-      redirect_to experiences_path, alert: "Invalid or unsafe URI for redirection."
-      return
-    end
-
-    redirect_to validated_uri, allow_other_host: true
-  end
-
-  def valid_federated_uri?(uri)
-      parsed_uri = URI.parse(uri)
-
-      # Only allow HTTPS
-      return false unless parsed_uri.scheme == "https"
-
-      # Check if the domain is in our allowed federated instances
-      # You can customize this logic based on your federation setup
-      allowed_domains = Rails.application.config.federation&.dig(:allowed_domains) || []
-
-      # If no specific domains are configured, allow any HTTPS domain
-      # but add basic validation
-      if allowed_domains.empty?
-        # Basic validation: must be a valid domain, no localhost/private IPs
-        return false if parsed_uri.host.nil?
-        return false if parsed_uri.host.match?(/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/)
-
-        return true
-      end
-
-      # Check against allowed domains
-      allowed_domains.include?(parsed_uri.host)
-  rescue URI::InvalidURIError
-      false
   end
 
   # Inject WebSocket P2P client library into experience HTML

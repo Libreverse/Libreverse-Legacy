@@ -8,7 +8,7 @@ Rails.logger.debug '[DevSeed][Metaverse] Creating sample experiences...'
 # Create or reuse a simple guest/dev account. The Account model stores password hashes in
 # password_hash via Rodauth; we avoid manual password handling here. For development sample
 # data we only need an owning account, so a guest or basic account is sufficient.
-account = Account.first || Account.create!(username: 'devseed', guest: true)
+account = Account.first || SystemAccounts.find_or_create_dev_metaverse_seed_owner!
 
 platforms = {
   'HoloWorld' => 20,

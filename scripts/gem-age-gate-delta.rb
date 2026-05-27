@@ -9,7 +9,7 @@ require_relative 'lib/gemfile-lock-packages'
 
 MIN_AGE_DAYS = Integer(ENV.fetch('MIN_AGE_DAYS', '7'))
 MIN_AGE_SECONDS = MIN_AGE_DAYS * 24 * 60 * 60
-CUTOFF_DATE = Time.zone.now - MIN_AGE_SECONDS
+CUTOFF_DATE = Time.now - MIN_AGE_SECONDS
 BASE_REF = ENV.fetch('BASE_REF', 'origin/main')
 ROOT = File.expand_path('..', __dir__)
 
@@ -70,7 +70,7 @@ puts "\n"
 if recent.any?
   puts "\n#{RED}❌ GEM DELTA AGE GATE BLOCKED#{RESET}"
   recent.each do |g|
-    days = ((Time.zone.now - g[:published]) / (24 * 60 * 60)).to_i
+    days = ((Time.now - g[:published]) / (24 * 60 * 60)).to_i
     puts "   #{RED}• #{g[:name]} (#{g[:version]})#{RESET} (#{days}d old)"
   end
   puts "\n#{YELLOW}   PR can stay open; re-run gates when versions age in.#{RESET}\n"

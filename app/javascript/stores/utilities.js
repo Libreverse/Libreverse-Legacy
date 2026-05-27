@@ -9,6 +9,25 @@ import {
     searchStore,
 } from "../stores";
 
+const UNSAFE_PROPERTY_KEYS = new Set([
+    "__proto__",
+    "constructor",
+    "prototype",
+]);
+
+function isPlainObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function safeShallowMerge(base, patch) {
+    const merged = { ...base };
+    for (const key of Object.keys(patch)) {
+        if (UNSAFE_PROPERTY_KEYS.has(key)) continue;
+        merged[key] = patch[key];
+    }
+    return merged;
+}
+
 /**
  * Store Management Utilities
  * Provides helper functions for managing stimulus-store state
@@ -52,13 +71,20 @@ export class StoreManager {
     importStoreState(jsonString) {
         try {
             const state = JSON.parse(jsonString);
-            for (const key of Object.keys(state)) {
-                if (this.stores[key]) {
-                    this.stores[key].value = {
-                        ...this.stores[key].value,
-                        ...state[key],
-                    };
-                }
+            if (!isPlainObject(state)) {
+                return false;
+            }
+
+            for (const key of Object.keys(this.stores)) {
+                if (!Object.hasOwn(state, key)) continue;
+
+                const patch = state[key];
+                if (!isPlainObject(patch)) continue;
+
+                this.stores[key].value = safeShallowMerge(
+                    this.stores[key].value,
+                    patch,
+                );
             }
             return true;
         } catch (error) {
@@ -116,11 +142,18 @@ export class StoreManager {
 
     // Batch update multiple stores
     batchUpdateStores(updates) {
-        for (const storeName of Object.keys(updates)) {
-            const store = this.stores[storeName];
-            if (store) {
-                store.value = { ...store.value, ...updates[storeName] };
-            }
+        if (!isPlainObject(updates)) return;
+
+        for (const storeName of Object.keys(this.stores)) {
+            if (!Object.hasOwn(updates, storeName)) continue;
+
+            const patch = updates[storeName];
+            if (!isPlainObject(patch)) continue;
+
+            this.stores[storeName].value = safeShallowMerge(
+                this.stores[storeName].value,
+                patch,
+            );
         }
     }
 

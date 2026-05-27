@@ -4,8 +4,9 @@
  */
 
 import { readFileSync, writeFileSync } from 'fs';
+import { cliSarifFileName, resolveAllowedSarifPath } from './lib/safe_sarif_path.mjs';
 
-const sarifPath = process.argv[2] || 'socket-full.sarif';
+const sarifPath = resolveAllowedSarifPath(cliSarifFileName('socket-full.sarif'));
 const outPath = '.github/socket-baseline.json';
 
 const sarif = JSON.parse(readFileSync(sarifPath, 'utf8'));

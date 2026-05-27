@@ -3,6 +3,10 @@
 
 import * as Y from "yjs";
 import { WebsocketProvider as YActionCableProvider } from "@y-rb/actioncable";
+import {
+    addSameOriginMessageListener,
+    readSameOriginMessageData,
+} from "./trusted_post_message.js";
 
 // Default ICE servers (Google STUN)
 const DEFAULT_ICE_SERVERS = [
@@ -39,10 +43,9 @@ class LibreverseWebSocketP2P {
         // One-shot disconnect timers per document for relaxed flushes
         this._disconnectTimeouts = new Map(); // docId -> timeout id
 
-        // Listen for messages from parent window (Libreverse app)
-        window.addEventListener("message", (event) => {
-            // Origin check for security - only accept messages from same origin
-            if (event.origin !== globalThis.location.origin) {
+        addSameOriginMessageListener((event) => {
+            const data = readSameOriginMessageData(event);
+            if (!data) {
                 console.warn(
                     "WebSocket P2P: Ignored message from untrusted origin:",
                     event.origin,
@@ -50,7 +53,7 @@ class LibreverseWebSocketP2P {
                 return;
             }
 
-            this.handleParentMessage(event.data);
+            this.handleParentMessage(data);
         });
 
         // Signal that iframe is ready

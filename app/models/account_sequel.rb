@@ -28,7 +28,8 @@ begin
     def verified? = status == 2
     def closed? = status == 3
     def guest? = guest == true
-    def admin? = admin == true
+    def system_account? = system_account == true
+    def admin? = admin == true && !system_account?
     # Provide parity with ActiveRecord Account interface
     def effective_user? = !guest?
 

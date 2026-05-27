@@ -5,8 +5,7 @@ class ExampleExperiencesService
     def add_examples
       Rails.logger.debug "🎯 Adding example experiences to Libreverse..."
 
-      # First, let's find or create an admin account to own these experiences
-      admin_account = find_or_create_admin_account
+      demo_owner = find_or_create_demo_owner_account
 
       created_count = 0
       failed_count = 0
@@ -24,7 +23,7 @@ class ExampleExperiencesService
             next
           end
 
-          experience = create_experience_with_file(exp_data, html_file_data, admin_account)
+          experience = create_experience_with_file(exp_data, html_file_data, demo_owner)
 
           if experience.persisted?
             Rails.logger.debug "   ✅ Successfully created '#{experience.title}' (ID: #{experience.id})"
@@ -116,38 +115,20 @@ class ExampleExperiencesService
 
     private
 
-    def find_or_create_admin_account
-      admin_account = Account.find_by(admin: true)
-
-      if admin_account.nil?
-        Rails.logger.debug "⚠️  No admin account found. Creating one..."
-
-        # Create an admin account (bypassing validations for username)
-        admin_account = Account.new(
-          username: "admin_demo",
-          status: 2, # verified
-          admin: true,
-          guest: false
-        )
-
-        # Save without validations to avoid moderation issues with demo data
-        admin_account.save!(validate: false)
-        Rails.logger.debug "✅ Created admin account: #{admin_account.username} (ID: #{admin_account.id})"
-      else
-        Rails.logger.debug "✅ Using existing admin account: #{admin_account.username} (ID: #{admin_account.id})"
-      end
-
-      admin_account
+    def find_or_create_demo_owner_account
+      account = SystemAccounts.find_or_create_demo_experiences_owner!
+      Rails.logger.debug "✅ Using demo experiences owner: #{account.username} (ID: #{account.id})"
+      account
     end
 
-    def create_experience_with_file(exp_data, html_file_data, admin_account)
+    def create_experience_with_file(exp_data, html_file_data, owner_account)
       # Create the experience
       experience = Experience.new(
         title: exp_data[:title],
         description: exp_data[:description],
         author: exp_data[:author],
-        account: admin_account,
-        approved: true, # Auto-approve since it's created by admin
+        account: owner_account,
+        approved: true, # Auto-approve demo content owned by the system demo account
         offline_available: exp_data.fetch(:offline_available) { true } # Default to true for examples
       )
 

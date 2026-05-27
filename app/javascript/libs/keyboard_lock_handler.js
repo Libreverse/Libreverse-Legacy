@@ -1,5 +1,22 @@
 // Keyboard lock handler for iframes
 (function () {
+    const TRUSTED_MESSAGE_ORIGIN = globalThis.location.origin;
+
+    function isTrustedMessage(event) {
+        return Boolean(event?.origin) && event.origin === TRUSTED_MESSAGE_ORIGIN;
+    }
+
+    function addTrustedMessageListener(handler) {
+        const wrappedListener = (event) => {
+            if (!isTrustedMessage(event)) return;
+            handler(event);
+        };
+
+        globalThis.addEventListener("message", wrappedListener);
+        return () =>
+            globalThis.removeEventListener("message", wrappedListener);
+    }
+
     // Store original keyboard lock methods
     const originalLock = navigator.keyboard && navigator.keyboard.lock;
     const originalUnlock = navigator.keyboard && navigator.keyboard.unlock;
@@ -21,35 +38,28 @@
                 ? new Promise((resolve, reject) => {
                       const messageId = Date.now() + Math.random();
 
-                      const messageHandler = (event) => {
-                          // Add origin check for security
-                          if (event.origin !== globalThis.location.origin) {
-                              return;
-                          }
-                          if (
-                              event.data.type === "keyboard-lock-response" &&
-                              event.data.messageId === messageId
-                          ) {
-                              globalThis.removeEventListener(
-                                  "message",
-                                  messageHandler,
-                              );
-                              if (event.data.success) {
-                                  resolve();
-                              } else {
-                                  reject(
-                                      new Error(
-                                          event.data.error ||
-                                              "Keyboard lock failed",
-                                      ),
-                                  );
+                      const removeListener = addTrustedMessageListener(
+                          (event) => {
+                              if (
+                                  event.data.type ===
+                                      "keyboard-lock-response" &&
+                                  event.data.messageId === messageId
+                              ) {
+                                  removeListener();
+                                  if (event.data.success) {
+                                      resolve();
+                                  } else {
+                                      reject(
+                                          new Error(
+                                              event.data.error ||
+                                                  "Keyboard lock failed",
+                                          ),
+                                      );
+                                  }
                               }
-                          }
-                      };
+                          },
+                      );
 
-                      globalThis.addEventListener("message", messageHandler);
-
-                      // Request parent to lock keyboard
                       globalThis.parent.postMessage(
                           {
                               type: "keyboard-lock-request",
@@ -59,12 +69,8 @@
                           globalThis.location.origin,
                       );
 
-                      // Timeout after 5 seconds
                       setTimeout(() => {
-                          globalThis.removeEventListener(
-                              "message",
-                              messageHandler,
-                          );
+                          removeListener();
                           reject(new Error("Keyboard lock request timeout"));
                       }, 5000);
                   })
@@ -74,7 +80,6 @@
         };
 
         navigator.keyboard.unlock = function () {
-            // Try to call from iframe first
             if (originalUnlock) {
                 try {
                     return originalUnlock.call(this);
@@ -86,7 +91,6 @@
                 }
             }
 
-            // Fallback: request parent to unlock keyboard
             if (globalThis.parent && globalThis.parent !== globalThis) {
                 globalThis.parent.postMessage(
                     {
@@ -98,12 +102,7 @@
         };
     }
 
-    // Listen for responses from parent
-    globalThis.addEventListener("message", (event) => {
-        // Verify origin for security
-        if (event.origin !== globalThis.location.origin) {
-            return;
-        }
+    addTrustedMessageListener((event) => {
         if (event.data.type === "keyboard-lock-response") {
             // Response handled by the promise resolver above
         }
