@@ -164,7 +164,7 @@ jobs:
           key: deps-${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
 
       - name: Upload node_modules for downstream jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ci-deps-${{ github.run_id }}
           path: node_modules
