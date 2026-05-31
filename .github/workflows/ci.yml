@@ -150,13 +150,13 @@ jobs:
           use-socket-firewall: "false"
 
       - name: Save bundle cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: vendor/bundle
           key: deps-${{ runner.os }}-bundle-${{ hashFiles('Gemfile.lock') }}
 
       - name: Save JS cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: |
             node_modules
