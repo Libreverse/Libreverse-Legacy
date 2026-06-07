@@ -38,4 +38,4 @@ runs:
               echo "Setting up test database..."
               RAILS_ENV=test bundle exec rails db:test:prepare
               echo "Running Rails tests..."
-              RAILS_ENV=test bundle exec rails test
+              RAILS_ENV=test bundle exec rails test --verbose

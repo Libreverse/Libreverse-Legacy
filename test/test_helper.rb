@@ -198,6 +198,8 @@ module TestLogCapture
   end
 end
 
+CI_TEST_RUN = ENV["CI"].present? || ENV["GITHUB_ACTIONS"].present?
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
@@ -211,19 +213,23 @@ module ActiveSupport
 
     # Set up log capture for each test - but disable during fixture loading
     setup do
-      TestLogCapture.setup
-      # Enable capture only after fixtures are loaded
-      TestLogCapture.enable_capture
-      TestLogCapture.start_capture_for_test
+      unless CI_TEST_RUN
+        TestLogCapture.setup
+        # Enable capture only after fixtures are loaded
+        TestLogCapture.enable_capture
+        TestLogCapture.start_capture_for_test
+      end
     end
 
     # Finish log capture after each test
     teardown do
+      unless CI_TEST_RUN
         test_name = "#{self.class.name}##{method_name}"
         TestLogCapture.finish_capture_for_test(self, test_name) if TestLogCapture.respond_to?(:finish_capture_for_test)
         TestLogCapture.disable_capture if TestLogCapture.respond_to?(:disable_capture)
+      end
     rescue StandardError => e
-        puts "Warning: Test teardown error (#{e.class}: #{e.message}), continuing..."
+      puts "Warning: Test teardown error (#{e.class}: #{e.message}), continuing..."
     end
 
     # Add more helper methods to be used by all tests here...
