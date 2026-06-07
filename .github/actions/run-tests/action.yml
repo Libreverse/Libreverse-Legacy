@@ -24,6 +24,11 @@ runs:
           shell: bash
           run: bash scripts/bootstrap-robotstxt-sources.sh
 
+        - name: Ensure TiDB test database exists
+          if: inputs.test-suite == 'rails-test'
+          shell: bash
+          run: bundle exec ruby scripts/ci-ensure-tidb-test-database.rb
+
         - name: Run Rails tests
           if: inputs.test-suite == 'rails-test'
           shell: bash
