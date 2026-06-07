@@ -17,6 +17,7 @@
         ".windsurf/**/*.md"
     ],
     "ignores": [
+        "AGENTS.md",
         "node_modules/",
         "vendor/bundle/",
         "tmp/",

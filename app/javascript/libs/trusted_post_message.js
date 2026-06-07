@@ -15,8 +15,8 @@ export function addSameOriginMessageListener(listener) {
 }
 
 export function readSameOriginMessageData(event) {
-    if (!isSameOriginMessage(event)) return null;
+    if (!isSameOriginMessage(event)) return;
 
     const { data } = event;
-    return data !== null && typeof data === "object" ? data : null;
+    return data !== null && typeof data === "object" ? data : undefined;
 }
