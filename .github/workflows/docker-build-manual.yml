@@ -1,0 +1,120 @@
+name: Docker build (manual)
+
+# Validate Dockerfile / deploy without waiting on the full CI test matrix.
+# Actions → "Docker build (manual)" → Run workflow, or:
+#   gh workflow run docker-build-manual.yml --ref main
+#   gh workflow run docker-build-manual.yml --ref main -f push_to_quay=true -f deploy=true -f run_smoke=true
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_to_quay:
+        description: Push image to Quay after a successful build
+        type: boolean
+        default: false
+      deploy:
+        description: Trigger Coolify redeploy (requires push_to_quay)
+        type: boolean
+        default: false
+      run_smoke:
+        description: Hit /up after deploy (requires deploy)
+        type: boolean
+        default: false
+
+concurrency:
+  group: docker-build-manual
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Docker build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Log in to Quay
+        if: inputs.push_to_quay
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: "1"
+          TIDB_HOST: ${{ secrets.TIDB_HOST }}
+          TIDB_USERNAME: ${{ secrets.TIDB_USERNAME }}
+          TIDB_PASSWORD: ${{ secrets.TIDB_PASSWORD }}
+        run: |
+          docker build \
+            --secret id=tidb_host,env=TIDB_HOST \
+            --secret id=tidb_username,env=TIDB_USERNAME \
+            --secret id=tidb_password,env=TIDB_PASSWORD \
+            -t quay.io/georgebaskervil/libreverse:legacy .
+
+      - name: Snyk container test
+        if: inputs.push_to_quay
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG: ${{ secrets.SNYK_ORG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SNYK_TOKEN:-}" ]; then
+            echo "::warning::SNYK_TOKEN not set — skipping container scan"
+            exit 0
+          fi
+          curl -fsSL https://static.snyk.io/cli/latest/snyk-linux -o snyk
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/snyk
+          snyk auth "$SNYK_TOKEN"
+          args=(container test quay.io/georgebaskervil/libreverse:legacy --severity-threshold=high)
+          if [ -n "${SNYK_ORG:-}" ]; then
+            args+=(--org="$SNYK_ORG")
+          fi
+          snyk "${args[@]}"
+
+      - name: Push to Quay.io
+        if: inputs.push_to_quay
+        run: docker push quay.io/georgebaskervil/libreverse:legacy
+
+      - name: Trigger Coolify redeploy
+        if: inputs.push_to_quay && inputs.deploy
+        run: |
+          curl -fsS -X GET "https://c.geor.me/api/v1/deploy?uuid=${{ secrets.COOLIFY_DEPLOY_UUID }}&force=false" \
+            -H "Content-Type: application/json" \
+            -H "authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+
+      - name: Wait for deploy
+        if: inputs.push_to_quay && inputs.deploy
+        run: sleep 90
+
+      - name: Bypass Cloudflare for health check
+        if: inputs.push_to_quay && inputs.deploy && inputs.run_smoke
+        uses: ./.github/actions/bypass-cloudflare
+        with:
+          cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Smoke check /up
+        if: inputs.push_to_quay && inputs.deploy && inputs.run_smoke
+        env:
+          DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
+        run: |
+          set -euo pipefail
+          URL="${DEPLOY_HEALTH_URL:-https://libreverse-legacy.geor.me/up}"
+          for i in 1 2 3; do
+            if curl -fsS --max-time 30 "$URL" >/dev/null; then
+              echo "Health check passed: $URL"
+              exit 0
+            fi
+            echo "Attempt $i failed; retrying..."
+            sleep 30
+          done
+          echo "::error::Smoke check failed for $URL"
+          exit 1
