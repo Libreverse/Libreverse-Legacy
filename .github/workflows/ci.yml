@@ -366,6 +366,7 @@ jobs:
       TIDB_HOST: ${{ secrets.TIDB_HOST }}
       TIDB_USERNAME: ${{ secrets.TIDB_USERNAME }}
       TIDB_PASSWORD: ${{ secrets.TIDB_PASSWORD }}
+      TIDB_TEST_SSL_MODE: VERIFY_IDENTITY
     strategy:
       fail-fast: false
       matrix:
