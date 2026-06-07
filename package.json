@@ -71,7 +71,7 @@
         "typescript": "^6.0.3",
         "webpack": "^5.101.3",
         "webpack-assets-manifest": "^6.2.2",
-        "webpack-cli": "^6.0.1",
+        "webpack-cli": "^7.0.3",
         "webpack-merge": "^6.0.1",
         "webpack-subresource-integrity": "^5.1.0",
         "what-input": "^5.2.12",
