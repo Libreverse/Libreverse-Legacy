@@ -123,7 +123,7 @@
         "vite-plugin-full-reload": "^1.2.0",
         "vite-plugin-ruby": "^5.1.1",
         "vite-plugin-stimulus-hmr": "^3.0.0",
-        "webpack-dev-server": "5.2.0"
+        "webpack-dev-server": "5.2.4"
     },
     "trustedDependencies": [
         "@parcel/watcher",
