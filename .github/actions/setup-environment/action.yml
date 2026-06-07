@@ -51,6 +51,16 @@ runs:
           with:
               node-version: "24"
 
+        - name: Install native build deps
+          if: inputs.skip-install != 'true'
+          shell: bash
+          run: sudo apt-get update -y && sudo apt-get install -y cmake g++ make
+
+        - name: Bootstrap robotstxt sources
+          if: inputs.skip-install != 'true'
+          shell: bash
+          run: bash scripts/bootstrap-robotstxt-sources.sh
+
         - name: Socket Firewall
           if: inputs.skip-install != 'true' && inputs.use-socket-firewall == 'true'
           uses: ./.github/actions/socket-firewall

@@ -14,6 +14,16 @@ runs:
           shell: bash
           run: NODE_OPTIONS='--experimental-vm-modules' npx jest --coverage=false
 
+        - name: Install native build deps
+          if: inputs.test-suite == 'rails-test'
+          shell: bash
+          run: sudo apt-get update -y && sudo apt-get install -y cmake g++ make
+
+        - name: Bootstrap robotstxt sources
+          if: inputs.test-suite == 'rails-test'
+          shell: bash
+          run: bash scripts/bootstrap-robotstxt-sources.sh
+
         - name: Run Rails tests
           if: inputs.test-suite == 'rails-test'
           shell: bash
