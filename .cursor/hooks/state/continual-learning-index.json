@@ -1,18 +1,34 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-07T10:57:15.000Z",
+  "updatedAt": "2026-06-07T17:35:13.000Z",
   "transcripts": {
     "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/5c2de7b7-9aad-4009-961a-02530e8ae236/5c2de7b7-9aad-4009-961a-02530e8ae236.jsonl": {
       "mtime": 1780819646,
-      "processedAt": "2026-06-07T10:57:15.000Z"
+      "processedAt": "2026-06-07T17:35:13.000Z"
     },
     "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/c1a34522-d158-4780-906a-d206ddd7a964/c1a34522-d158-4780-906a-d206ddd7a964.jsonl": {
       "mtime": 1780518472,
       "processedAt": "2026-06-07T10:57:15.000Z"
     },
+    "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/c1a34522-d158-4780-906a-d206ddd7a964/subagents/654efe1e-7933-4b2f-b17a-1a7b26da0b3d.jsonl": {
+      "mtime": 1780518298,
+      "processedAt": "2026-06-07T17:35:13.000Z"
+    },
+    "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/c1a34522-d158-4780-906a-d206ddd7a964/subagents/9c173a2c-3975-403f-a7cb-9e1bfebfa498.jsonl": {
+      "mtime": 1779915775,
+      "processedAt": "2026-06-07T17:35:13.000Z"
+    },
     "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/d189fc43-f1b4-4c7f-adba-261bef1500f0/d189fc43-f1b4-4c7f-adba-261bef1500f0.jsonl": {
-      "mtime": 1780829788,
-      "processedAt": "2026-06-07T10:57:15.000Z"
+      "mtime": 1780853682,
+      "processedAt": "2026-06-07T17:35:13.000Z"
+    },
+    "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/d189fc43-f1b4-4c7f-adba-261bef1500f0/subagents/59e4a3d6-d335-4c95-82be-4c9440f6391d.jsonl": {
+      "mtime": 1780829841,
+      "processedAt": "2026-06-07T17:35:13.000Z"
+    },
+    "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/d189fc43-f1b4-4c7f-adba-261bef1500f0/subagents/a386e57c-183b-4781-9ce5-4568f71a3b37.jsonl": {
+      "mtime": 1780853684,
+      "processedAt": "2026-06-07T17:35:13.000Z"
     },
     "/Users/george/.cursor/projects/Users-george-Libreverse-Legacy/agent-transcripts/d46ef5d2-7e46-41d4-97c1-bf2fd489f4e4/d46ef5d2-7e46-41d4-97c1-bf2fd489f4e4.jsonl": {
       "mtime": 1779912266,
