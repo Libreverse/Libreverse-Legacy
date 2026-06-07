@@ -46,7 +46,7 @@ class FederatedAuthHelperTest < ActionView::TestCase
   end
 
   test "parse_identifier enforces minimum username length" do
-    assert_nil parse_identifier("ab@trusted.example")
+    assert_equal [ nil, nil ], parse_identifier("ab@trusted.example")
     assert_equal [ "alice", "trusted.example" ], parse_identifier("alice@trusted.example")
   end
 end
