@@ -27,11 +27,15 @@ runs:
         - name: Run Rails tests
           if: inputs.test-suite == 'rails-test'
           shell: bash
+          env:
+              DISABLE_SPRING: "1"
           run: |
               set -euo pipefail
+              # Artifact-restored SQLite files may exist without Solid Cache indexes.
+              rm -f db/cache_test.sqlite3 db/queue_test.sqlite3
               echo "Creating test databases..."
               RAILS_ENV=test DISABLE_EAGER_LOAD=true bundle exec rails db:create
               echo "Setting up test database..."
               RAILS_ENV=test bundle exec rails db:test:prepare
               echo "Running Rails tests..."
-              bundle exec rails test
+              RAILS_ENV=test bundle exec rails test
