@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Use phusion/passenger-full as base image for a smaller image.
-FROM phusion/passenger-ruby34:latest
+FROM phusion/passenger-ruby33:latest
 
 # Better optimisation flags
 ENV CFLAGS="-O3 -march=x86-64-v3 -pipe -flto -fno-fast-math"
@@ -75,6 +75,7 @@ COPY plugins/ plugins/
 ## Copy .gitmodules and initialize submodules, then copy vendored gem
 COPY .gitmodules ./
 COPY vendor/gems/google_robotstxt_parser ./vendor/gems/google_robotstxt_parser
+COPY vendor/gems/second_level_cache ./vendor/gems/second_level_cache
 
 ## Populate google/robotstxt and abseil-cpp sources without requiring a git repo context
 RUN set -eux; \
@@ -94,7 +95,7 @@ RUN set -eux; \
 
 ## Install production gems (exclude development & test groups) with verbose logs
 ## and verify the vendored gem is present and loadable
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
     && rvm --default use "$RUBY_VER" \
     && bundle config set without "development test" \
     && bundle install --jobs=$(nproc) --retry 3 --verbose \
@@ -127,7 +128,7 @@ RUN mkdir -p vendor/assets/stylesheets/codemirror/lib \
     cp node_modules/flatpickr/dist/flatpickr.min.css vendor/assets/stylesheets/flatpickr/dist/flatpickr.min.css
 
 # Precompile Rails bootsnap cache
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
     && rvm --default use "$RUBY_VER" \
     && bundle exec bootsnap precompile app/ lib/'
 
@@ -140,7 +141,7 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sor
 RUN --mount=type=secret,id=tidb_host \
     --mount=type=secret,id=tidb_username \
     --mount=type=secret,id=tidb_password \
-    bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.4" | sort -V | tail -1) \
+    bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
     && rvm use "$RUBY_VER" \
     && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
     && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
