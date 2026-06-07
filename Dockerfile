@@ -7,7 +7,6 @@ FROM phusion/passenger-ruby33:latest
 ENV CFLAGS="-O3 -march=x86-64-v3 -pipe -flto -fno-fast-math"
 ENV CXXFLAGS="-O3 -march=x86-64-v3 -pipe -flto -fno-fast-math"
 ENV LDFLAGS="-flto -Wl,-O3 -Wl,-Bsymbolic-functions -Wl,--as-needed"
-ENV RUBYOPT="--yjit --yjit-exec-mem-size=2 --yjit-mem-size=3 --yjit-call-threshold=1 --yjit-cold-threshold=1000000 --yjit-code-gc"
 
 # Install mimalloc for improved memory management (with dev headers for optimization)
 # Also install and configure ModSecurity (with OWASP CRS) for WAF protection
@@ -67,6 +66,7 @@ RUN rm -f /etc/service/nginx/down
 WORKDIR /home/app/webapp
 
 ## Copy Gemfile and Gemfile.lock first for efficient caching
+COPY .ruby-version ./
 COPY Gemfile Gemfile.lock ./
 
 ## Copy bundler plugins (required for bundle install)
@@ -93,10 +93,17 @@ RUN set -eux; \
             rm -rf vendor/gems/google_robotstxt_parser/ext/robotstxt/abseil-cpp/.git; \
         fi
 
+## Install the repo-pinned Ruby (passenger-ruby33 may ship a newer 3.3.x patch)
+RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
+    && rv=$(cat .ruby-version) \
+    && if ! rvm list strings | grep -qx "$rv"; then rvm install "$rv" --disable-binary; fi \
+    && rvm --default use "$rv" \
+    && ruby --version'
+
 ## Install production gems (exclude development & test groups) with verbose logs
 ## and verify the vendored gem is present and loadable
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
-    && rvm --default use "$RUBY_VER" \
+RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
+    && rvm use "$(cat .ruby-version)" --default \
     && bundle config set without "development test" \
     && bundle install --jobs=$(nproc) --retry 3 --verbose \
     && bundle info google_robotstxt_parser \
@@ -128,8 +135,8 @@ RUN mkdir -p vendor/assets/stylesheets/codemirror/lib \
     cp node_modules/flatpickr/dist/flatpickr.min.css vendor/assets/stylesheets/flatpickr/dist/flatpickr.min.css
 
 # Precompile Rails bootsnap cache
-RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
-    && rvm --default use "$RUBY_VER" \
+RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
+    && rvm use "$(cat .ruby-version)" --default \
     && bundle exec bootsnap precompile app/ lib/'
 
 # Precompile all assets in one step.
@@ -141,8 +148,8 @@ RUN bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sor
 RUN --mount=type=secret,id=tidb_host \
     --mount=type=secret,id=tidb_username \
     --mount=type=secret,id=tidb_password \
-    bash -lc 'RUBY_VER=$(ls -1 /usr/local/rvm/rubies/ | grep "^ruby-3\\.3" | sort -V | tail -1) \
-    && rvm use "$RUBY_VER" \
+    bash -lc 'source /usr/local/rvm/scripts/rvm \
+    && rvm use "$(cat .ruby-version)" --default \
     && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
     && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
     && export TIDB_PASSWORD=$(cat /run/secrets/tidb_password) \
@@ -234,7 +241,8 @@ ENV RAILS_ENV=production \
     RACK_ENV=production \
     BUNDLE_GEMFILE=/home/app/webapp/Gemfile \
     GRPC_HOST=127.0.0.1 \
-    GRPC_ALLOW_INSECURE=true
+    GRPC_ALLOW_INSECURE=true \
+    RUBYOPT="--yjit --yjit-exec-mem-size=2 --yjit-call-threshold=1 --yjit-cold-threshold=1000000 --yjit-code-gc"
 CMD ["/usr/local/bin/entrypoint-with-mimalloc.sh"]
 
 # Expose application ports (HTTP and gRPC)
