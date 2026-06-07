@@ -93,10 +93,13 @@ RUN set -eux; \
             rm -rf vendor/gems/google_robotstxt_parser/ext/robotstxt/abseil-cpp/.git; \
         fi
 
-## Install the repo-pinned Ruby (passenger-ruby33 may ship a newer 3.3.x patch)
+## Install the repo-pinned Ruby (passenger-ruby33 may ship a newer 3.3.x patch).
+## Prefer RVM binary rubies; do not inherit -flto/-O3 CFLAGS during interpreter compile.
 RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
     && rv=$(cat .ruby-version) \
-    && if ! rvm list strings | grep -qx "$rv"; then rvm install "$rv" --disable-binary; fi \
+    && if ! rvm list strings | grep -qx "$rv"; then \
+         env -u CFLAGS -u CXXFLAGS -u LDFLAGS rvm install "$rv"; \
+       fi \
     && rvm --default use "$rv" \
     && ruby --version'
 
