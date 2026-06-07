@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-ruby "3.3.7"
+ruby "~> 3.3.7", "< 3.4"
 
 # Security: Enforce 1-week minimum age for all gems
 # Install with: bundle plugin install bundler-age_gate --path plugins/bundler-age_gate

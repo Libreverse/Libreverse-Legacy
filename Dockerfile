@@ -93,20 +93,16 @@ RUN set -eux; \
             rm -rf vendor/gems/google_robotstxt_parser/ext/robotstxt/abseil-cpp/.git; \
         fi
 
-## Install the repo-pinned Ruby (passenger-ruby33 may ship a newer 3.3.x patch).
-## Prefer RVM binary rubies; do not inherit -flto/-O3 CFLAGS during interpreter compile.
+## Use passenger-ruby33 preinstalled Ruby 3.3.x (RVM has no binary for 3.3.7 on Ubuntu 24.04).
 RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
-    && rv=$(cat .ruby-version) \
-    && if ! rvm list strings | grep -qx "$rv"; then \
-         env -u CFLAGS -u CXXFLAGS -u LDFLAGS rvm install "$rv"; \
-       fi \
+    && rv=$(rvm list strings | grep "^ruby-3\\.3" | sort -V | tail -1) \
     && rvm --default use "$rv" \
     && ruby --version'
 
 ## Install production gems (exclude development & test groups) with verbose logs
 ## and verify the vendored gem is present and loadable
 RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
-    && rvm use "$(cat .ruby-version)" --default \
+    && rvm use default \
     && bundle config set without "development test" \
     && bundle install --jobs=$(nproc) --retry 3 --verbose \
     && bundle info google_robotstxt_parser \
@@ -139,7 +135,7 @@ RUN mkdir -p vendor/assets/stylesheets/codemirror/lib \
 
 # Precompile Rails bootsnap cache
 RUN bash -lc 'source /usr/local/rvm/scripts/rvm \
-    && rvm use "$(cat .ruby-version)" --default \
+    && rvm use default \
     && bundle exec bootsnap precompile app/ lib/'
 
 # Precompile all assets in one step.
@@ -152,7 +148,7 @@ RUN --mount=type=secret,id=tidb_host \
     --mount=type=secret,id=tidb_username \
     --mount=type=secret,id=tidb_password \
     bash -lc 'source /usr/local/rvm/scripts/rvm \
-    && rvm use "$(cat .ruby-version)" --default \
+    && rvm use default \
     && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
     && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
     && export TIDB_PASSWORD=$(cat /run/secrets/tidb_password) \
