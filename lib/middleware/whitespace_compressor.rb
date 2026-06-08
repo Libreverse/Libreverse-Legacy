@@ -11,9 +11,12 @@ class WhitespaceCompressor
     # so an explicit "preserve" regex is unnecessary and can introduce edge-case bugs.
   end
 
+  DISPLAY_PAGE_PATH = %r{\A/experiences/[^/]+/display(?:\.[^/]+)?\z}.freeze
+
   def call(env)
     status, headers, body = @app.call(env)
     return [ status, headers, body ] unless headers["Content-Type"]&.include?("text/html")
+    return [ status, headers, body ] if display_page?(env)
 
     Rails.logger.debug "WhitespaceCompressor: Processing HTML response" if defined?(Rails)
 
@@ -161,5 +164,9 @@ class WhitespaceCompressor
   rescue StandardError => e
     Rails.logger.warn "WhitespaceCompressor: Failed HTML minify: #{e.class}: #{e.message}" if defined?(Rails)
     html
+  end
+
+  def display_page?(env)
+    env["PATH_INFO"].to_s.match?(DISPLAY_PAGE_PATH)
   end
 end

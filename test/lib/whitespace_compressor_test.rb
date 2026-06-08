@@ -18,6 +18,24 @@ class WhitespaceCompressorTest < ActiveSupport::TestCase
     assert_includes body.join, "Hello"
   end
 
+  test "skips minification for experience display pages" do
+    original = "<html><body><iframe srcdoc=\"&lt;p&gt; keep &lt;/p&gt;\"></iframe></body></html>"
+    app = lambda do |_env|
+      [ 200, { "Content-Type" => "text/html; charset=utf-8" }, [ original ] ]
+    end
+    compressor = WhitespaceCompressor.new(app)
+
+    compressor.define_singleton_method(:minify_html) do |_html, _config|
+      flunk "minify_html should not run on display pages"
+    end
+
+    env = { "PATH_INFO" => "/experiences/my-slug/display" }
+    status, _headers, body = compressor.call(env)
+
+    assert_equal 200, status
+    assert_equal original, body.join
+  end
+
   test "does not enable js minification for iframe srcdoc" do
     compressor = WhitespaceCompressor.new(->(_env) { [ 200, { "Content-Type" => "text/plain" }, [] ] })
     configs = []
