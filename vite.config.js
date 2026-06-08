@@ -289,7 +289,7 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             // no point doing gc in such a short lived process
-            Erb({env: {RUBYOPT: "--yjit --yjit-exec-mem-size=2 --yjit-mem-size=3 --yjit-call-threshold=1 --yjit-cold-threshold=1000000", DISABLE_SPRING: '0'}}),
+            Erb({env: {RUBYOPT: "--yjit --yjit-exec-mem-size=2 --yjit-call-threshold=1 --yjit-cold-threshold=1000000 --yjit-code-gc", DISABLE_SPRING: '0'}}),
             coffeescript(),
             rubyPlugin(),
             stimulusHMR(),

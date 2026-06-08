@@ -152,7 +152,8 @@ RUN --mount=type=secret,id=tidb_host \
     && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
     && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
     && export TIDB_PASSWORD=$(cat /run/secrets/tidb_password) \
-    && RUBYOPT="-rbundler/setup" SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production NODE_ENV=production \
+    && export RUBYOPT="-rbundler/setup" \
+    && SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production NODE_ENV=production \
        VITE_RUBY_SKIP_ASSETS_PRECOMPILE_INSTALL=true \
        bundle exec rails assets:precompile \
     && rm -rf public/vite-dev public/vite-test'
