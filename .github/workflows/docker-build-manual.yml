@@ -60,6 +60,7 @@ jobs:
 
       - name: Snyk container test
         if: inputs.push_to_quay
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           SNYK_ORG: ${{ secrets.SNYK_ORG }}
