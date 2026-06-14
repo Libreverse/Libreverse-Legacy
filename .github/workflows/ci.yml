@@ -51,7 +51,7 @@ jobs:
           bun-version-file: .bun-version
 
       - name: Setup Ruby (gates only)
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.310.0
         with:
           bundler-cache: false
 
