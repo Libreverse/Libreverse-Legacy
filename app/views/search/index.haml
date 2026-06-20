@@ -3,7 +3,7 @@
 = render "layouts/leniswrapper" do
   = render "layouts/navigationshortcutswrapper" do
     - brasserie_img = bitmap_image_data_url("images/brasserie")
-    .sp-bg{role: "presentation", data: {controller: "raindrop", "raindrop-background-url-value": brasserie_img['.avif'], scroll: true, "scroll-speed": "-2"}}
+    .sp-bg{role: "presentation", "data-controller" => "raindrop", "data-raindrop-background-url-value" => brasserie_img['.avif'], "data-scroll" => "", "data-scroll-speed" => "-2"}
     .sp-centerify
       %header.sp-main{role: "banner"}
         %h1.large= t('search.index.title')

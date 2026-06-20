@@ -70,11 +70,29 @@ export default class extends ApplicationController
     img.src = @backgroundUrlValue
 
     img.onload = =>
+      @mountRainyDayCanvas(img)
+    img.onerror = =>
+      console.error "RaindropController: failed to load background image"
+    return
+
+  mountRainyDayCanvas: (img) ->
+    mount = =>
       return unless @active and @element.isConnected
-      # Create a canvas that fills the parent
+
+      width = @element.offsetWidth
+      height = @element.offsetHeight
+      if width <= 0 or height <= 0
+        requestAnimationFrame mount
+        return
+
+      # Remove any previous canvas
+      for child in @element.children
+        if child.tagName?.toLowerCase() is 'canvas'
+          child.remove()
+
       canvas = document.createElement('canvas')
-      canvas.width = @element.offsetWidth
-      canvas.height = @element.offsetHeight
+      canvas.width = width
+      canvas.height = height
       canvas.style.position = 'absolute'
       canvas.style.top = 0
       canvas.style.left = 0
@@ -106,9 +124,9 @@ export default class extends ApplicationController
         canvas: canvas
         image: img
 
-      # Merge options: background image, parent, canvas, size, plus user config
       options = Object.assign {}, defaultRainyDayOptions, @rainydayOptionsValue
 
+      @rainyday?.destroy?()
       @rainyday = new window.RainyDay(options)
 
       min = 8
@@ -116,6 +134,7 @@ export default class extends ApplicationController
       rate = 1
       speed = 25
       @rainyday.rain([[min, base, rate]], speed)
+    mount()
     return
 
   setupParallax: ->
