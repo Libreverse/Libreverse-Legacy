@@ -63,6 +63,8 @@ export default defineConfig(({ mode }) => {
             rollupOptions: {
                 input: {
                     application: "app/javascript/application.js",
+                    experience_multiplayer_collab:
+                        "app/javascript/experience_multiplayer_collab.js",
                     emails: "app/stylesheets/emails.scss",
                 },
                 output: {

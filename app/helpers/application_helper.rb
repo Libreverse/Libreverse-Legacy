@@ -2,6 +2,7 @@ module ApplicationHelper
   include BetterHtml::Helpers
   include EmojiHelper # Include the new helper
   include EmailHelper # Include email CSS inlining helper
+  include ExperiencePlatformHelper
   require "base64"
   require "unicode"
   require "cgi"

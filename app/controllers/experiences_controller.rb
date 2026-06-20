@@ -2,6 +2,7 @@ require "digest"
 
 class ExperiencesController < ApplicationController
   include EnhancedSpamProtection
+  include ExperiencePlatformHelper
 
   # invisible_captcha is configured in SpamDetection concern
   invisible_captcha only: %i[create update],
@@ -117,24 +118,13 @@ class ExperiencesController < ApplicationController
     end
 
     @html_content = @experience.html_file.download.force_encoding("UTF-8")
+    @html_content = prepare_experience_html(@html_content)
 
-    # Inject storage access script for secure IndexedDB access
-    @html_content = inject_storage_access_client(@html_content)
-
-    # Inject permissions handler script for camera, microphone, sensors, and geolocation
-    @html_content = inject_permissions_handler_client(@html_content)
-
-    # Inject keyboard lock handler script for secure keyboard access
-    @html_content = inject_keyboard_lock_handler_client(@html_content)
-
-    # Auto-enable P2P for experiences that are not offline-available (multiplayer experiences)
-    unless @experience.offline_available
+    if multiplayer_session?
       @is_multiplayer = true
-      @session_id = params[:session].presence || "exp_#{@experience.id}_#{SecureRandom.hex(8)}"
+      @session_id = params[:session]
       @peer_id = "peer_#{current_account.id}_#{SecureRandom.hex(4)}"
-
-      # Inject WebSocket P2P client library into the experience HTML
-      @html_content = inject_websocket_p2p_client(@html_content)
+      @p2p_config = { autoCollab: true, yjs: { mode: "strict", webrtc: true } }
     end
 
     # Force browsers to treat the data as a download and prevent MIME sniffing
@@ -204,79 +194,7 @@ class ExperiencesController < ApplicationController
     true
   end
 
-  # Inject WebSocket P2P client library into experience HTML
-  def inject_websocket_p2p_client(html_content)
-    # Read the P2P client script
-    p2p_client_script = File.read(Rails.root.join("app/javascript/libs/websocket_p2p_client.js"))
-
-    # Wrap in script tags
-    p2p_script_tag = "<script>#{p2p_client_script}</script>"
-
-    # Inject the script before the closing </head> tag, or before </body> if no </head>
-    if html_content.include?("</head>")
-      html_content.sub("</head>", "#{p2p_script_tag}\n</head>")
-    elsif html_content.include?("</body>")
-      html_content.sub("</body>", "#{p2p_script_tag}\n</body>")
-    else
-      # If no proper HTML structure, append to end
-      html_content + p2p_script_tag
-    end
-  end
-
-  # Inject Storage Access client library into experience HTML
-  def inject_storage_access_client(html_content)
-    # Read the storage access script
-    storage_script = File.read(Rails.root.join("app/javascript/libs/storage_access.js"))
-
-    # Wrap in script tags
-    storage_script_tag = "<script>#{storage_script}</script>"
-
-    # Inject the script before the closing </head> tag, or before </body> if no </head>
-    if html_content.include?("</head>")
-      html_content.sub("</head>", "#{storage_script_tag}\n</head>")
-    elsif html_content.include?("</body>")
-      html_content.sub("</body>", "#{storage_script_tag}\n</body>")
-    else
-      # If no proper HTML structure, append to end
-      html_content + storage_script_tag
-    end
-  end
-
-  # Inject Permissions Handler client library into experience HTML
-  def inject_permissions_handler_client(html_content)
-    # Read the permissions handler script
-    permissions_script = File.read(Rails.root.join("app/javascript/libs/permissions_handler.js"))
-
-    # Wrap in script tags
-    permissions_script_tag = "<script>#{permissions_script}</script>"
-
-    # Inject the script before the closing </head> tag, or before </body> if no </head>
-    if html_content.include?("</head>")
-      html_content.sub("</head>", "#{permissions_script_tag}\n</head>")
-    elsif html_content.include?("</body>")
-      html_content.sub("</body>", "#{permissions_script_tag}\n</body>")
-    else
-      # If no proper HTML structure, append to end
-      html_content + permissions_script_tag
-    end
-  end
-
-  # Inject Keyboard Lock Handler client library into experience HTML
-  def inject_keyboard_lock_handler_client(html_content)
-    # Read the keyboard lock handler script
-    keyboard_script = File.read(Rails.root.join("app/javascript/libs/keyboard_lock_handler.js"))
-
-    # Wrap in script tags
-    keyboard_script_tag = "<script>#{keyboard_script}</script>"
-
-    # Inject the script before the closing </head> tag, or before </body> if no </head>
-    if html_content.include?("</head>")
-      html_content.sub("</head>", "#{keyboard_script_tag}\n</head>")
-    elsif html_content.include?("</body>")
-      html_content.sub("</body>", "#{keyboard_script_tag}\n</body>")
-    else
-      # If no proper HTML structure, append to end
-      html_content + keyboard_script_tag
-    end
+  def multiplayer_session?
+    params[:session].present?
   end
 end

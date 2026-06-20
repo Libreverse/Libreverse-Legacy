@@ -1,7 +1,8 @@
-// We'll import the library after setting up window mocks
 import { jest } from "@jest/globals";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-// Mock yrb-actioncable provider to avoid network dependencies (ESM-compatible)
 await jest.unstable_mockModule("@y-rb/actioncable", () => ({
     WebsocketProvider: class MockProvider {
         constructor() {
@@ -12,7 +13,6 @@ await jest.unstable_mockModule("@y-rb/actioncable", () => ({
     },
 }));
 
-// Minimal ActionCable mock
 globalThis.ActionCable = {
     createConsumer: () => ({
         subscriptions: {
@@ -21,58 +21,64 @@ globalThis.ActionCable = {
     }),
 };
 
+const platformPath = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../../app/javascript/libs/libreverse_platform.js",
+);
+
 let postMessageSpy;
 
-beforeAll(async () => {
-    // Ensure parent reference is the same window object
+beforeAll(() => {
     globalThis.parent = globalThis;
-    // Spy on parent.postMessage before the lib runs
     postMessageSpy = jest
         .spyOn(globalThis.parent, "postMessage")
         .mockImplementation(() => {});
-    // Now import the library which will create the global P2P and post iframe-ready
-    await import("../../app/javascript/libs/websocket_p2p_client.js");
+    eval(readFileSync(platformPath, "utf8"));
+
+    const multiplayer = globalThis.Libreverse.services.multiplayer;
+    multiplayer.enableCollab = function enableCollab() {
+        if (this._collabLoading) return this._collabLoading;
+        this._collabLoading = import("../../app/javascript/libs/multiplayer_collab.js").then(
+            () => this,
+        );
+        return this._collabLoading;
+    };
 });
 
-describe("Injected P2P + Yjs API", () => {
+describe("Experience platform multiplayer API", () => {
     beforeEach(() => {
-        // Clear postMessage calls between tests
         postMessageSpy.mockClear();
     });
 
-    it("exposes global P2P object", () => {
-        expect(globalThis.P2P).toBeDefined();
+    it("exposes optional multiplayer service without forcing collab", () => {
+        expect(globalThis.Libreverse.services.multiplayer).toBeDefined();
         expect(typeof globalThis.P2P.send).toBe("function");
-        expect(typeof globalThis.P2P.attachCollab).toBe("function");
-        expect(typeof globalThis.P2P.getDoc).toBe("function");
+        expect(globalThis.P2P.getStatus()).toBe("idle");
     });
 
-    it("fires iframe-ready message", () => {
-        expect(globalThis.LibreverseWebSocketP2P).toBeDefined();
-        const spy = jest.spyOn(
-            globalThis.LibreverseWebSocketP2P.prototype,
-            "sendToParent",
+    it("can notify parent when ready", () => {
+        postMessageSpy.mockClear();
+        globalThis.Libreverse.services.multiplayer.sendToParent("iframe-ready", {});
+        expect(postMessageSpy).toHaveBeenCalledWith(
+            { type: "iframe-ready", data: {} },
+            globalThis.location.origin,
         );
-        // Creating a new instance triggers the constructor which should emit iframe-ready
-        new globalThis.LibreverseWebSocketP2P();
-        expect(spy).toHaveBeenCalledWith("iframe-ready", {});
-        spy.mockRestore();
     });
 
-    it("attaches default collab doc after init", () => {
+    it("attaches default collab doc after init when autoCollab is enabled", async () => {
         const handler = jest.fn();
         const unsub = globalThis.P2P.onCollabReady(handler);
 
-        // simulate parent p2p-init
         globalThis.P2P.handleParentMessage({
             type: "p2p-init",
             peerId: "peer-1",
             sessionId: "sess-123",
             isHost: true,
             connected: true,
+            config: { autoCollab: true },
         });
 
-        // provider will not actually connect in this mock; ensure no throw and default id set
+        await globalThis.P2P._collabLoading;
         expect(globalThis.P2P.defaultDocId).toBe("session:sess-123");
         unsub();
     });
