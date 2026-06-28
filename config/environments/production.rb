@@ -29,8 +29,15 @@ Rails.application.configure do
 
   # Vite JS/fonts/images via B2 + Cloudflare when enabled at runtime (Docker sets VITE_ASSETS_B2_ENABLED).
   if ENV["VITE_ASSETS_B2_ENABLED"].to_s.match?(/\A(1|true|yes|on)\z/i)
-    config.asset_host = ENV.fetch("B2_ASSETS_PUBLIC_URL") do
+    vite_cdn_host = ENV.fetch("B2_ASSETS_PUBLIC_URL") do
       "https://libreverse-legacy-static.libreverse.io/file/libreverse-legacy-assets"
+    end
+    # Only Vite output is offloaded to B2. Scope asset_host to /vite/ paths so
+    # Shakapacker (/packs) and Propshaft (/assets) assets stay same-origin and are
+    # served from the image by nginx — a global asset_host would rewrite them to the
+    # CDN, where they were never uploaded (broken links).
+    config.asset_host = proc do |source|
+      source.to_s.start_with?("/vite/") ? vite_cdn_host : nil
     end
   end
 
