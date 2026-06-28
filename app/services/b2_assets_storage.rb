@@ -8,7 +8,7 @@ class B2AssetsStorage
   BUCKET = ENV.fetch("B2_ASSETS_BUCKET", "libreverse-legacy-assets")
   REGION = ENV.fetch("B2_ASSETS_REGION", "us-east-005")
   PREFIX = "vite"
-  MANIFEST_KEEP_PATTERN = %r{\A\.vite/manifest(-assets)?\.json\z}.freeze
+  MANIFEST_KEEP_PATTERN = %r{\A\.vite/manifest(-assets)?\.json\z}
   # CSS must stay same-origin: root-relative url(/vite/assets/...) in a CDN-hosted
   # stylesheet resolves against the CDN host, not the app host.
   CSS_KEEP_SUFFIX = ".css"
@@ -72,10 +72,10 @@ class B2AssetsStorage
     def mime_type_for(relative_path)
       ext = File.extname(relative_path)
       Rack::Mime.mime_type(ext).presence || case ext.downcase
-      when ".mjs" then "application/javascript"
-      when ".map" then "application/json"
-      else "application/octet-stream"
-      end
+                                            when ".mjs" then "application/javascript"
+                                            when ".map" then "application/json"
+                                            else "application/octet-stream"
+                                            end
     end
 
     def vite_output_dir
@@ -120,7 +120,7 @@ class B2AssetsStorage
 
       pruned = prune_stale_objects!(keys)
 
-      puts "[vite:upload_to_b2] uploaded #{uploaded}, skipped #{skipped}, pruned #{pruned} — s3://#{BUCKET}/#{PREFIX}/"
+      Rails.logger.debug "[vite:upload_to_b2] uploaded #{uploaded}, skipped #{skipped}, pruned #{pruned} — s3://#{BUCKET}/#{PREFIX}/"
       true
     end
 
@@ -137,15 +137,13 @@ class B2AssetsStorage
 
         FileUtils.rm(absolute)
         removed += 1
-      end
 
-      Dir.glob(root.join("**/*")).sort.reverse_each do |absolute|
-        FileUtils.rmdir(absolute) if File.directory?(absolute)
+      FileUtils.rmdir(absolute) if File.directory?(absolute)
       rescue Errno::ENOTEMPTY, Errno::ENOENT
         nil
       end
 
-      puts "[vite:strip_from_image] removed #{removed} vite files (manifests and css kept)"
+      Rails.logger.debug "[vite:strip_from_image] removed #{removed} vite files (manifests and css kept)"
       true
     end
 
@@ -166,21 +164,21 @@ class B2AssetsStorage
       end
 
       key_id = ENV["B2_ASSETS_KEY_ID"].to_s
-      puts "endpoint: #{ENDPOINT}"
-      puts "bucket:   #{BUCKET}"
-      puts "region:   #{REGION}"
-      puts "key id:   #{key_id[0, 8]}… (#{key_id.length} chars)"
+      Rails.logger.debug "endpoint: #{ENDPOINT}"
+      Rails.logger.debug "bucket:   #{BUCKET}"
+      Rails.logger.debug "region:   #{REGION}"
+      Rails.logger.debug "key id:   #{key_id[0, 8]}… (#{key_id.length} chars)"
 
       client.list_objects_v2(bucket: BUCKET, prefix: "#{PREFIX}/", max_keys: 1)
-      puts "list:     ok"
+      Rails.logger.debug "list:     ok"
 
       test_key = "#{PREFIX}/_connection-test-#{Time.now.to_i}.txt"
       body = "libreverse-legacy b2 test #{Time.now.utc.iso8601}"
       client.put_object(bucket: BUCKET, key: test_key, body: body, content_type: "text/plain")
-      puts "upload:   ok (#{test_key})"
+      Rails.logger.debug "upload:   ok (#{test_key})"
 
       client.head_object(bucket: BUCKET, key: test_key)
-      puts "head:     ok"
+      Rails.logger.debug "head:     ok"
 
       public_url = "#{public_base_url}/#{test_key}"
       uri = URI(public_url)
@@ -191,11 +189,11 @@ class B2AssetsStorage
         warn "public:   failed — HTTP #{response.code} for #{public_url}"
         return false
       end
-      puts "public:   ok (#{public_url})"
+      Rails.logger.debug "public:   ok (#{public_url})"
 
       client.delete_object(bucket: BUCKET, key: test_key)
-      puts "delete:   ok"
-      puts "B2 connection test passed"
+      Rails.logger.debug "delete:   ok"
+      Rails.logger.debug "B2 connection test passed"
       true
     rescue Aws::S3::Errors::ServiceError => e
       warn "B2 failed at #{e.class}: #{e.message}"

@@ -23,7 +23,8 @@ function installCollabExtensions(service) {
 
     service.docs = service.docs || new Map();
     service.serverProviders = service.serverProviders || new Map();
-    service.serverProviderFactories = service.serverProviderFactories || new Map();
+    service.serverProviderFactories =
+        service.serverProviderFactories || new Map();
     service.webrtcProviders = service.webrtcProviders || new Map();
     service.docConfigs = service.docConfigs || new Map();
     service.collabReadyHandlers = service.collabReadyHandlers || new Set();
@@ -36,9 +37,14 @@ function installCollabExtensions(service) {
             const existing = this.serverProviders.get(documentId);
             const cfg = this.docConfigs.get(documentId);
             if (cfg) {
-                if (cfg.mode === "strict") this._connectServerProvider(documentId);
+                if (cfg.mode === "strict")
+                    this._connectServerProvider(documentId);
                 else this._disconnectServerProvider(documentId, false);
-                if (cfg.webrtc) this._ensureWebRTCProvider(documentId, this.docs.get(documentId));
+                if (cfg.webrtc)
+                    this._ensureWebRTCProvider(
+                        documentId,
+                        this.docs.get(documentId),
+                    );
                 else this._destroyWebRTCProvider(documentId);
             }
             return existing;
@@ -49,7 +55,9 @@ function installCollabExtensions(service) {
             (globalThis.ActionCable?.createConsumer &&
                 globalThis.ActionCable.createConsumer());
         if (!consumer) {
-            throw new Error("No ActionCable consumer available for Yjs provider");
+            throw new Error(
+                "No ActionCable consumer available for Yjs provider",
+            );
         }
 
         if (!this.docs.has(documentId)) this.docs.set(documentId, new Y.Doc());
@@ -66,11 +74,17 @@ function installCollabExtensions(service) {
         const cfg = this.docConfigs.get(documentId);
 
         const factory = () => {
-            const provider = new YActionCableProvider(ydoc, consumer, "SyncChannel", {
-                id: documentId,
-            });
+            const provider = new YActionCableProvider(
+                ydoc,
+                consumer,
+                "SyncChannel",
+                {
+                    id: documentId,
+                },
+            );
             provider.on("status", (eventStatus) => {
-                if (eventStatus.status === "connected") this._notifyCollabReady(documentId);
+                if (eventStatus.status === "connected")
+                    this._notifyCollabReady(documentId);
             });
             return provider;
         };
@@ -94,13 +108,14 @@ function installCollabExtensions(service) {
         }
     };
 
-    service.getDoc = function getDoc(documentId = this.defaultDocId) {
-        if (!documentId) return undefined;
+    service.getDoc = function getDocument(documentId = this.defaultDocId) {
+        if (!documentId) return;
         return this.docs.get(documentId);
     };
 
     service.onCollabReady = function onCollabReady(handler) {
-        if (typeof handler !== "function") throw new TypeError("Handler must be a function");
+        if (typeof handler !== "function")
+            throw new TypeError("Handler must be a function");
         this.collabReadyHandlers.add(handler);
         if (this.defaultDocId && this._providerConnected(this.defaultDocId)) {
             handler(this.defaultDocId, this.getDoc(this.defaultDocId));
@@ -108,7 +123,10 @@ function installCollabExtensions(service) {
         return () => this.collabReadyHandlers.delete(handler);
     };
 
-    service.configureDocSync = function configureDocSync(documentId, options = {}) {
+    service.configureDocSync = function configureDocumentSync(
+        documentId,
+        options = {},
+    ) {
         if (!documentId) throw new Error("documentId required");
         const previous = this.docConfigs.get(documentId) || {
             mode: "strict",
@@ -122,37 +140,45 @@ function installCollabExtensions(service) {
         }
         if (typeof options.webrtc === "boolean") next.webrtc = options.webrtc;
         if (Array.isArray(options.signaling)) {
-            next.signaling = options.signaling.filter((u) => typeof u === "string");
+            next.signaling = options.signaling.filter(
+                (u) => typeof u === "string",
+            );
         }
         const userIce = Array.isArray(options.iceServers)
             ? options.iceServers
-            : Array.isArray(options.ice_servers)
+            : (Array.isArray(options.ice_servers)
               ? options.ice_servers
-              : undefined;
-        if (Array.isArray(userIce)) next.iceServers = service._normalizeIceServers(userIce);
+              : undefined);
+        if (Array.isArray(userIce))
+            next.iceServers = service._normalizeIceServers(userIce);
         this.docConfigs.set(documentId, next);
 
         if (previous.mode !== next.mode) {
             if (next.mode === "strict") this._connectServerProvider(documentId);
             else this._disconnectServerProvider(documentId);
         }
-        if (next.webrtc) this._ensureWebRTCProvider(documentId, this.docs.get(documentId));
+        if (next.webrtc)
+            this._ensureWebRTCProvider(documentId, this.docs.get(documentId));
         else this._destroyWebRTCProvider(documentId);
         return next;
     };
 
     service.configureSync = function configureSync(options = {}) {
-        if (this.defaultDocId) return this.configureDocSync(this.defaultDocId, options);
+        if (this.defaultDocId)
+            return this.configureDocSync(this.defaultDocId, options);
     };
     service.setSyncMode = function setSyncMode(mode) {
-        if (this.defaultDocId) return this.configureDocSync(this.defaultDocId, { mode });
+        if (this.defaultDocId)
+            return this.configureDocSync(this.defaultDocId, { mode });
     };
     service.enableWebRTC = function enableWebRTC(enabled = true) {
         if (this.defaultDocId) {
-            return this.configureDocSync(this.defaultDocId, { webrtc: !!enabled });
+            return this.configureDocSync(this.defaultDocId, {
+                webrtc: !!enabled,
+            });
         }
     };
-    service.flushDocToServer = function flushDocToServer(documentId) {
+    service.flushDocToServer = function flushDocumentToServer(documentId) {
         if (
             !this.serverProviders.get(documentId) &&
             this.serverProviderFactories.get(documentId)
@@ -166,7 +192,10 @@ function installCollabExtensions(service) {
         if (cfg?.mode === "relaxed") {
             const existing = this._disconnectTimeouts.get(documentId);
             if (existing) clearTimeout(existing);
-            const id = setTimeout(() => this._disconnectServerProvider(documentId), 1500);
+            const id = setTimeout(
+                () => this._disconnectServerProvider(documentId),
+                1500,
+            );
             this._disconnectTimeouts.set(documentId, id);
         }
     };
@@ -190,11 +219,16 @@ function installCollabExtensions(service) {
         }
     };
 
-    service._ensureWebRTCProvider = async function _ensureWebRTCProvider(documentId, ydoc) {
-        if (this.webrtcProviders.has(documentId)) return this.webrtcProviders.get(documentId);
+    service._ensureWebRTCProvider = async function _ensureWebRTCProvider(
+        documentId,
+        ydoc,
+    ) {
+        if (this.webrtcProviders.has(documentId))
+            return this.webrtcProviders.get(documentId);
         try {
             const module_ = await import(/* @vite-ignore */ "y-webrtc");
-            const WebrtcProvider = module_.WebrtcProvider || globalThis.WebrtcProvider;
+            const WebrtcProvider =
+                module_.WebrtcProvider || globalThis.WebrtcProvider;
             if (!WebrtcProvider) throw new Error("y-webrtc not available");
             const cfg = this.docConfigs.get(documentId) || {};
             const options = {};
@@ -211,12 +245,17 @@ function installCollabExtensions(service) {
             return provider;
         } catch (error) {
             console.warn("y-webrtc provider unavailable", error);
-            const cfg = this.docConfigs.get(documentId) || { mode: "strict", webrtc: false };
+            const cfg = this.docConfigs.get(documentId) || {
+                mode: "strict",
+                webrtc: false,
+            };
             this.docConfigs.set(documentId, { ...cfg, webrtc: false });
         }
     };
 
-    service._destroyWebRTCProvider = function _destroyWebRTCProvider(documentId) {
+    service._destroyWebRTCProvider = function _destroyWebRTCProvider(
+        documentId,
+    ) {
         const provider = this.webrtcProviders.get(documentId);
         if (!provider) return;
         try {
@@ -247,7 +286,9 @@ function installCollabExtensions(service) {
         return normalized.length > 0 ? normalized : DEFAULT_ICE_SERVERS;
     };
 
-    service._connectServerProvider = function _connectServerProvider(documentId) {
+    service._connectServerProvider = function _connectServerProvider(
+        documentId,
+    ) {
         const provider = this.serverProviders.get(documentId);
         if (!provider) return;
         try {
@@ -267,30 +308,35 @@ function installCollabExtensions(service) {
         const provider = this.serverProviders.get(documentId);
         if (!provider) return;
         try {
-            if (typeof provider.disconnect === "function") provider.disconnect();
-            else if (destroyIfNeeded && typeof provider.destroy === "function") provider.destroy();
+            if (typeof provider.disconnect === "function")
+                provider.disconnect();
+            else if (destroyIfNeeded && typeof provider.destroy === "function")
+                provider.destroy();
         } catch (error) {
             console.warn("server provider disconnect/destroy error", error);
         }
         if (destroyIfNeeded) this.serverProviders.delete(documentId);
     };
 
-    service._attachDefaultCollabIfReady = function _attachDefaultCollabIfReady() {
-        if (!this.sessionId || this.defaultDocId) return;
-        this.defaultDocId = `session:${this.sessionId}`;
-        this.attachCollab(this.defaultDocId);
-        const defaults = this.initialConfig?.yjs || {};
-        const mode = defaults.mode || "strict";
-        const webrtc = defaults.webrtc === undefined ? true : !!defaults.webrtc;
-        const cfgIce = Array.isArray(defaults.iceServers)
-            ? defaults.iceServers
-            : Array.isArray(defaults.ice_servers)
-              ? defaults.ice_servers
-              : undefined;
-        const documentOptions = { mode, webrtc };
-        if (Array.isArray(cfgIce)) documentOptions.iceServers = this._normalizeIceServers(cfgIce);
-        this.configureDocSync(this.defaultDocId, documentOptions);
-    };
+    service._attachDefaultCollabIfReady =
+        function _attachDefaultCollabIfReady() {
+            if (!this.sessionId || this.defaultDocId) return;
+            this.defaultDocId = `session:${this.sessionId}`;
+            this.attachCollab(this.defaultDocId);
+            const defaults = this.initialConfig?.yjs || {};
+            const mode = defaults.mode || "strict";
+            const webrtc =
+                defaults.webrtc === undefined ? true : !!defaults.webrtc;
+            const cfgIce = Array.isArray(defaults.iceServers)
+                ? defaults.iceServers
+                : (Array.isArray(defaults.ice_servers)
+                  ? defaults.ice_servers
+                  : undefined);
+            const documentOptions = { mode, webrtc };
+            if (Array.isArray(cfgIce))
+                documentOptions.iceServers = this._normalizeIceServers(cfgIce);
+            this.configureDocSync(this.defaultDocId, documentOptions);
+        };
 
     service.__collabInstalled = true;
     if (service.sessionId) service._attachDefaultCollabIfReady();

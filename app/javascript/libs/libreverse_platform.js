@@ -35,14 +35,17 @@
     }
 
     MultiplayerService.prototype.sendToParent = function (type, data) {
-        globalThis.parent.postMessage({ type: type, data: data || {} }, SAME_ORIGIN);
+        globalThis.parent.postMessage(
+            { type: type, data: data || {} },
+            SAME_ORIGIN,
+        );
     };
 
     MultiplayerService.prototype.handleParentMessage = function (message) {
         if (!message || !message.type) return;
 
         switch (message.type) {
-            case "p2p-init":
+            case "p2p-init": {
                 this.peerId = message.peerId;
                 this.sessionId = message.sessionId;
                 this.isHost = message.isHost;
@@ -54,34 +57,48 @@
                     var self = this;
                     this.enableCollab()
                         .then(function () {
-                            if (typeof self._attachDefaultCollabIfReady === "function") {
+                            if (
+                                typeof self._attachDefaultCollabIfReady ===
+                                "function"
+                            ) {
                                 self._attachDefaultCollabIfReady();
                             }
                         })
                         .catch(function (error) {
-                            console.warn("Multiplayer collab unavailable:", error);
+                            console.warn(
+                                "Multiplayer collab unavailable:",
+                                error,
+                            );
                         });
                 }
                 break;
-            case "p2p-status":
+            }
+            case "p2p-status": {
                 this.connected = message.connected;
                 this.status = message.connected ? "connected" : "disconnected";
                 this.onStatusChange(message);
                 break;
-            case "p2p-message":
+            }
+            case "p2p-message": {
                 this.onMessage(message.senderId, message.data);
                 break;
-            case "p2p-participants":
+            }
+            case "p2p-participants": {
                 this.participants = {};
-                for (var i = 0; i < (message.participants || []).length; i++) {
-                    var participant = message.participants[i];
-                    if (!participant || typeof participant.peerId !== "string") continue;
-                    var sanitized = participant.peerId.replace(/[^a-zA-Z0-9-]/g, "");
+                for (var index = 0; index < (message.participants || []).length; index++) {
+                    var participant = message.participants[index];
+                    if (!participant || typeof participant.peerId !== "string")
+                        continue;
+                    var sanitized = participant.peerId.replaceAll(
+                        /[^a-zA-Z0-9-]/g,
+                        "",
+                    );
                     if (!sanitized) continue;
                     this.participants[sanitized] = { peerId: sanitized };
                 }
                 this.onParticipantsChange(this.participants);
                 break;
+            }
         }
     };
 
@@ -105,14 +122,14 @@
             var script = document.createElement("script");
             script.type = "module";
             script.src = scriptUrl;
-            script.onload = function () {
+            script.addEventListener('load', function () {
                 self._collabLoaded = true;
                 resolve(self);
-            };
+            });
             script.onerror = function () {
                 reject(new Error("Failed to load multiplayer collab module"));
             };
-            document.head.appendChild(script);
+            document.head.append(script);
         });
 
         return this._collabLoading;
@@ -151,13 +168,13 @@
     MultiplayerService.prototype.onParticipantsChange = function () {};
 
     MultiplayerService.prototype.onMessage = function (senderId, data) {
-        this.messageHandlers.forEach(function (handler) {
+        for (const handler of this.messageHandlers) {
             try {
                 handler(senderId, data);
             } catch (error) {
                 console.error("Multiplayer message handler error:", error);
             }
-        });
+        }
     };
 
     MultiplayerService.prototype.addMessageHandler = function (handler) {
@@ -178,7 +195,8 @@
     Object.defineProperty(MultiplayerService.prototype, "onMessageCallback", {
         set: function (callback) {
             this.clearMessageHandlers();
-            if (typeof callback === "function") this.addMessageHandler(callback);
+            if (typeof callback === "function")
+                this.addMessageHandler(callback);
         },
     });
 
@@ -189,7 +207,7 @@
         );
     };
     MultiplayerService.prototype.getDoc = function () {
-        return undefined;
+        return;
     };
     MultiplayerService.prototype.onCollabReady = function () {
         return function () {};
@@ -210,7 +228,9 @@
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", notifyReady, { once: true });
+        document.addEventListener("DOMContentLoaded", notifyReady, {
+            once: true,
+        });
     } else {
         notifyReady();
     }
