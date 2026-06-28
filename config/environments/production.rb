@@ -29,10 +29,9 @@ Rails.application.configure do
 
   # Vite JS/fonts/images via B2 + Cloudflare when enabled at runtime (Docker sets VITE_ASSETS_B2_ENABLED).
   if ENV["VITE_ASSETS_B2_ENABLED"].to_s.match?(/\A(1|true|yes|on)\z/i)
-    config.asset_host = ENV.fetch(
-      "B2_ASSETS_PUBLIC_URL",
+    config.asset_host = ENV.fetch("B2_ASSETS_PUBLIC_URL") do
       "https://libreverse-legacy-static.libreverse.io/file/libreverse-legacy-assets"
-    )
+    end
   end
 
   # Specifies the header that your server uses for sending files.

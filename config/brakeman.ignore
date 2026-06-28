@@ -43,6 +43,52 @@
         79
       ],
       "note": ""
+    },
+    {
+      "warning_type": "Path Traversal",
+      "warning_code": 125,
+      "fingerprint": "3bc681a4354b843cb28f0251edaea431a45b754e8dea502898ef327528ed8878",
+      "check_name": "Pathname",
+      "message": "Absolute paths in `Pathname#join` cause the entire path to be relative to the absolute path, ignoring any prior values",
+      "file": "app/controllers/vite_assets_controller.rb",
+      "line": 20,
+      "link": "https://brakemanscanner.org/docs/warning_types/path_traversal/",
+      "code": "Rails.root.join(\"public/vite\", params[:path].to_s)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "ViteAssetsController",
+        "method": "show"
+      },
+      "user_input": "params[:path].to_s",
+      "confidence": "High",
+      "cwe_id": [
+        22
+      ],
+      "note": "safe_vite_path? rejects the path before this line: leading '/', '..', null bytes, and any '.'/'..' segment are refused, and the value must match a restrictive charset. The join can never receive an absolute or traversing path."
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "ab30ca76fc1638022241f1ba0e498b3205220f7e9e7aa3568bd8978518cbd920",
+      "check_name": "SendFile",
+      "message": "Parameter value used in file name",
+      "file": "app/controllers/vite_assets_controller.rb",
+      "line": 23,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file(Rails.root.join(\"public/vite\", params[:path].to_s), :disposition => \"inline\", :type => ((Rack::Mime.mime_type(File.extname(params[:path].to_s)) or \"application/octet-stream\")))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "ViteAssetsController",
+        "method": "show"
+      },
+      "user_input": "params[:path].to_s",
+      "confidence": "Weak",
+      "cwe_id": [
+        22
+      ],
+      "note": "Path is validated by safe_vite_path? before send_file (no traversal, leading slash, or null byte) and is constrained to public/vite. Files only ever served from the Vite output dir."
     }
   ],
   "brakeman_version": "7.1.0"

@@ -4,9 +4,9 @@ require "aws-sdk-s3"
 require "net/http"
 
 class B2AssetsStorage
-  ENDPOINT = ENV.fetch("B2_ASSETS_ENDPOINT", "https://s3.us-east-005.backblazeb2.com")
-  BUCKET = ENV.fetch("B2_ASSETS_BUCKET", "libreverse-legacy-assets")
-  REGION = ENV.fetch("B2_ASSETS_REGION", "us-east-005")
+  ENDPOINT = ENV.fetch("B2_ASSETS_ENDPOINT") { "https://s3.us-east-005.backblazeb2.com" }
+  BUCKET = ENV.fetch("B2_ASSETS_BUCKET") { "libreverse-legacy-assets" }
+  REGION = ENV.fetch("B2_ASSETS_REGION") { "us-east-005" }
   PREFIX = "vite"
   MANIFEST_KEEP_PATTERN = %r{\A\.vite/manifest(-assets)?\.json\z}
   # CSS must stay same-origin: root-relative url(/vite/assets/...) in a CDN-hosted
@@ -19,7 +19,7 @@ class B2AssetsStorage
     end
 
     def enabled?
-      cast_boolean(ENV.fetch("VITE_ASSETS_B2_ENABLED", Rails.env.production?))
+      cast_boolean(ENV.fetch("VITE_ASSETS_B2_ENABLED") { Rails.env.production? })
     end
 
     def cast_boolean(value)
@@ -32,7 +32,7 @@ class B2AssetsStorage
     end
 
     def public_base_url
-      ENV.fetch("B2_ASSETS_PUBLIC_URL", "https://libreverse-legacy-static.libreverse.io/file/#{BUCKET}")
+      ENV.fetch("B2_ASSETS_PUBLIC_URL") { "https://libreverse-legacy-static.libreverse.io/file/#{BUCKET}" }
     end
 
     def public_object_url(path)
