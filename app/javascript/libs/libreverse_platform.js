@@ -85,7 +85,11 @@
             }
             case "p2p-participants": {
                 this.participants = {};
-                for (var index = 0; index < (message.participants || []).length; index++) {
+                for (
+                    var index = 0;
+                    index < (message.participants || []).length;
+                    index++
+                ) {
                     var participant = message.participants[index];
                     if (!participant || typeof participant.peerId !== "string")
                         continue;
@@ -122,7 +126,7 @@
             var script = document.createElement("script");
             script.type = "module";
             script.src = scriptUrl;
-            script.addEventListener('load', function () {
+            script.addEventListener("load", function () {
                 self._collabLoaded = true;
                 resolve(self);
             });
