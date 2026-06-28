@@ -71,11 +71,12 @@ class B2AssetsStorage
 
     def mime_type_for(relative_path)
       ext = File.extname(relative_path)
-      Rack::Mime.mime_type(ext).presence || case ext.downcase
-                                            when ".mjs" then "application/javascript"
-                                            when ".map" then "application/json"
-                                            else "application/octet-stream"
-                                            end
+      fallback = case ext.downcase
+      when ".mjs" then "application/javascript"
+      when ".map" then "application/json"
+      else "application/octet-stream"
+      end
+      Rack::Mime.mime_type(ext).presence || fallback
     end
 
     def vite_output_dir
@@ -120,7 +121,7 @@ class B2AssetsStorage
 
       pruned = prune_stale_objects!(keys)
 
-      Rails.logger.debug "[vite:upload_to_b2] uploaded #{uploaded}, skipped #{skipped}, pruned #{pruned} — s3://#{BUCKET}/#{PREFIX}/"
+      $stdout.puts "[vite:upload_to_b2] uploaded #{uploaded}, skipped #{skipped}, pruned #{pruned} — s3://#{BUCKET}/#{PREFIX}/"
       true
     end
 
@@ -137,13 +138,11 @@ class B2AssetsStorage
 
         FileUtils.rm(absolute)
         removed += 1
-
-      FileUtils.rmdir(absolute) if File.directory?(absolute)
-      rescue Errno::ENOTEMPTY, Errno::ENOENT
-        nil
       end
 
-      Rails.logger.debug "[vite:strip_from_image] removed #{removed} vite files (manifests and css kept)"
+      prune_empty_dirs!(root)
+
+      $stdout.puts "[vite:strip_from_image] removed #{removed} vite files (manifests and css kept)"
       true
     end
 
@@ -164,21 +163,21 @@ class B2AssetsStorage
       end
 
       key_id = ENV["B2_ASSETS_KEY_ID"].to_s
-      Rails.logger.debug "endpoint: #{ENDPOINT}"
-      Rails.logger.debug "bucket:   #{BUCKET}"
-      Rails.logger.debug "region:   #{REGION}"
-      Rails.logger.debug "key id:   #{key_id[0, 8]}… (#{key_id.length} chars)"
+      $stdout.puts "endpoint: #{ENDPOINT}"
+      $stdout.puts "bucket:   #{BUCKET}"
+      $stdout.puts "region:   #{REGION}"
+      $stdout.puts "key id:   #{key_id[0, 8]}… (#{key_id.length} chars)"
 
       client.list_objects_v2(bucket: BUCKET, prefix: "#{PREFIX}/", max_keys: 1)
-      Rails.logger.debug "list:     ok"
+      $stdout.puts "list:     ok"
 
       test_key = "#{PREFIX}/_connection-test-#{Time.now.to_i}.txt"
       body = "libreverse-legacy b2 test #{Time.now.utc.iso8601}"
       client.put_object(bucket: BUCKET, key: test_key, body: body, content_type: "text/plain")
-      Rails.logger.debug "upload:   ok (#{test_key})"
+      $stdout.puts "upload:   ok (#{test_key})"
 
       client.head_object(bucket: BUCKET, key: test_key)
-      Rails.logger.debug "head:     ok"
+      $stdout.puts "head:     ok"
 
       public_url = "#{public_base_url}/#{test_key}"
       uri = URI(public_url)
@@ -189,11 +188,11 @@ class B2AssetsStorage
         warn "public:   failed — HTTP #{response.code} for #{public_url}"
         return false
       end
-      Rails.logger.debug "public:   ok (#{public_url})"
+      $stdout.puts "public:   ok (#{public_url})"
 
       client.delete_object(bucket: BUCKET, key: test_key)
-      Rails.logger.debug "delete:   ok"
-      Rails.logger.debug "B2 connection test passed"
+      $stdout.puts "delete:   ok"
+      $stdout.puts "B2 connection test passed"
       true
     rescue Aws::S3::Errors::ServiceError => e
       warn "B2 failed at #{e.class}: #{e.message}"
@@ -205,6 +204,17 @@ class B2AssetsStorage
     end
 
     private
+
+    # Second pass after files are removed: drop directories left empty.
+    # Kept separate from the file-removal loop so dirs are only pruned once
+    # their contents are gone (and to keep each loop single-purpose).
+    def prune_empty_dirs!(root)
+      Dir.glob(root.join("**/*")).sort.reverse_each do |absolute|
+        FileUtils.rmdir(absolute) if File.directory?(absolute)
+      rescue Errno::ENOTEMPTY, Errno::ENOENT
+        nil
+      end
+    end
 
     def skip_upload?(key, local_size, relative_path)
       head = client.head_object(bucket: BUCKET, key: key)
