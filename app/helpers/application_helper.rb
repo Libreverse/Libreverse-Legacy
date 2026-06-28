@@ -582,6 +582,11 @@ module ApplicationHelper
         # naturally expires on deploy
         cache_key = [ :vite_inline, type, vite_manifest_version, relative_manifest_path ].join(":")
         Rails.cache.fetch(cache_key, expires_in: 24.hours) { File.read(file_path) }
+      elsif defined?(B2AssetsStorage) && B2AssetsStorage.cdn_urls?
+        cache_key = [ :vite_inline, type, vite_manifest_version, relative_manifest_path ].join(":")
+        Rails.cache.fetch(cache_key, expires_in: 24.hours) do
+          B2AssetsStorage.read_public_object(relative_manifest_path)
+        end
       else
         Rails.logger.error "[ViteInline] Asset not found at #{file_path} (derived from manifest key: #{manifest_key}, manifest path: #{manifest_path})"
         nil
@@ -597,7 +602,7 @@ module ApplicationHelper
   # naturally invalidates the cache keys.
   def vite_manifest_version
     @vite_manifest_version ||= begin
-      manifest_file = Rails.root.join("public", ViteRuby.instance.config.public_output_dir, "manifest.json")
+      manifest_file = Rails.root.join("public", ViteRuby.instance.config.public_output_dir, ".vite/manifest.json")
       if File.exist?(manifest_file)
         m = File.mtime(manifest_file).to_i
         s = File.size(manifest_file)

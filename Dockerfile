@@ -158,6 +158,18 @@ RUN --mount=type=secret,id=tidb_host \
        bundle exec rails assets:precompile \
     && rm -rf public/vite-dev public/vite-test'
 
+# Upload vite output to B2 and strip bulky files from the image (skipped without secrets)
+RUN --mount=type=secret,id=b2_key_id \
+    --mount=type=secret,id=b2_secret \
+    B2_ASSETS_KEY_ID="$(cat /run/secrets/b2_key_id 2>/dev/null || true)" \
+    B2_ASSETS_SECRET="$(cat /run/secrets/b2_secret 2>/dev/null || true)" \
+    bash -lc 'source /usr/local/rvm/scripts/rvm \
+    && rvm use default \
+    && SECRET_KEY_BASE_DUMMY=1 bundle exec rake vite:upload_to_b2'
+
+ENV VITE_ASSETS_B2_ENABLED="1"
+ENV B2_ASSETS_PUBLIC_URL="https://libreverse-legacy-static.libreverse.io/file/libreverse-legacy-assets"
+
 # Remove default Nginx site and add custom config for Rails app
 RUN rm /etc/nginx/sites-enabled/default
 RUN mkdir -p /etc/nginx/conf.d /etc/nginx/main.d

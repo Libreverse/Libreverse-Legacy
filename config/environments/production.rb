@@ -27,8 +27,13 @@ Rails.application.configure do
   # Always serve precompiled static files from `public/`.
   config.public_file_server.enabled = false
 
-  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  # Vite JS/fonts/images via B2 + Cloudflare when enabled at runtime (Docker sets VITE_ASSETS_B2_ENABLED).
+  if ENV["VITE_ASSETS_B2_ENABLED"].to_s.match?(/\A(1|true|yes|on)\z/i)
+    config.asset_host = ENV.fetch(
+      "B2_ASSETS_PUBLIC_URL",
+      "https://libreverse-legacy-static.libreverse.io/file/libreverse-legacy-assets"
+    )
+  end
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache

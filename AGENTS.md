@@ -12,6 +12,7 @@
 
 - Rails 8 full-stack app (Libreverse-Legacy); Ruby 3.3.7 via rbenv (`.ruby-version`); JS via Bun (`bun.lock`), gems via Bundler (Rodauth, mounted engines, Turbo/ActionCable).
 - Production Docker (`passenger-ruby33`): preinstalled Ruby 3.3.x (not RVM compile); Gemfile `ruby "~> 3.3.7", "< 3.4"`; pin codemirror 5.x for `lib/codemirror.css`; Ruby 3.3 YJIT omits `--yjit-mem-size` in vite/Dockerfile.
+- Production Vite output uploads to Backblaze B2 (`libreverse-legacy-assets`, prefix `vite/`, public via `libreverse-legacy-static.libreverse.io`) during Docker build (`rake vite:upload_to_b2` with `B2_ASSETS_KEY_ID`/`B2_ASSETS_SECRET` BuildKit secrets); bulky files stripped from image (`.vite/manifest*.json` and `*.css` stay same-origin). Runtime `VITE_ASSETS_B2_ENABLED=1` sets `asset_host` to the CDN; missing `/vite/*` falls through nginx to `ViteAssetsController` → 302 to B2. CI secrets: `B2_ASSETS_KEY_ID`, `B2_ASSETS_SECRET` (build only).
 - Security checks: Brakeman for Ruby; Snyk Code for JS/Ruby (IDE/MCP scans); CI secrets `SNYK_TOKEN`, `SNYK_ORG`, `SOCKET_API_KEY`; protected `main` autofix uses GitHub App (`APP_ID`, `APP_PRIVATE_KEY`).
 - Federated experiences link out via `experience_url` in views (no `redirect_to` with user-supplied URLs in `ExperiencesController#display`).
 - Federated OIDC dynamic client registration must POST only to HTTPS endpoints whose host matches the validated `oidc_domain`.

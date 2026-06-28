@@ -51,11 +51,15 @@ jobs:
           TIDB_HOST: ${{ secrets.TIDB_HOST }}
           TIDB_USERNAME: ${{ secrets.TIDB_USERNAME }}
           TIDB_PASSWORD: ${{ secrets.TIDB_PASSWORD }}
+          B2_ASSETS_KEY_ID: ${{ secrets.B2_ASSETS_KEY_ID }}
+          B2_ASSETS_SECRET: ${{ secrets.B2_ASSETS_SECRET }}
         run: |
           docker build \
             --secret id=tidb_host,env=TIDB_HOST \
             --secret id=tidb_username,env=TIDB_USERNAME \
             --secret id=tidb_password,env=TIDB_PASSWORD \
+            --secret id=b2_key_id,env=B2_ASSETS_KEY_ID \
+            --secret id=b2_secret,env=B2_ASSETS_SECRET \
             -t quay.io/georgebaskervil/libreverse:legacy .
 
       - name: Snyk container test

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get "search_new/index"
   get "search" => "search#index"
   post "search" => "search#create"
+  get "/vite/*path", to: "vite_assets#show", format: false, constraints: { path: /.+/ }
   root "homepage#index"
   get "terms", to: "terms#index"
   get "settings", to: "settings#index"

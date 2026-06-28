@@ -116,6 +116,25 @@ GEM
       turbo-rails
     autoprefixer-rails (10.4.21.0)
       execjs (~> 2)
+    aws-eventstream (1.4.0)
+    aws-partitions (1.1255.0)
+    aws-sdk-core (3.252.0)
+      aws-eventstream (~> 1, >= 1.3.0)
+      aws-partitions (~> 1, >= 1.992.0)
+      aws-sigv4 (~> 1.9)
+      base64
+      bigdecimal
+      jmespath (~> 1, >= 1.6.1)
+      logger
+    aws-sdk-kms (1.129.0)
+      aws-sdk-core (~> 3, >= 3.248.0)
+      aws-sigv4 (~> 1.5)
+    aws-sdk-s3 (1.225.1)
+      aws-sdk-core (~> 3, >= 3.248.0)
+      aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.5)
+    aws-sigv4 (1.12.1)
+      aws-eventstream (~> 1, >= 1.0.2)
     babel-source (5.8.35)
     babel-transpiler (0.7.0)
       babel-source (>= 4.0, < 6)
@@ -386,6 +405,7 @@ GEM
     jbuilder (2.14.1)
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
+    jmespath (1.6.2)
     json (2.19.4)
     json-canonicalization (1.0.0)
     json-jwt (1.17.0)
@@ -1046,6 +1066,9 @@ DEPENDENCIES
   activerecord-enhancedsqlite3-adapter
   argon2
   audits1984
+  aws-partitions (= 1.1255.0)
+  aws-sdk-core (= 3.252.0)
+  aws-sdk-s3 (= 1.225.1)
   better_html
   bootsnap
   brakeman

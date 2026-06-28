@@ -86,7 +86,11 @@ module Emoji
       else
         relative  = manifest_path.sub(%r{^/?#{ViteRuby.instance.config.public_output_dir}/}, "")
         file_path = Rails.root.join("public", ViteRuby.instance.config.public_output_dir, relative)
-        File.exist?(file_path) ? File.read(file_path) : nil
+        if File.exist?(file_path)
+          File.read(file_path)
+        elsif defined?(B2AssetsStorage) && B2AssetsStorage.cdn_urls?
+          B2AssetsStorage.read_public_object(relative)
+        end
       end
     rescue StandardError => e
       Rails.logger.error "Emoji::Renderer#read_vite_asset_content – #{e.class}: #{e.message}\n#{e.backtrace.take(5).join("\n")}"
