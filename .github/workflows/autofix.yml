@@ -63,6 +63,25 @@ jobs:
                   fi
                   echo "Changed files:" && cat changed_files.txt || true
 
+                  # Only files changed in THIS push are eligible to be committed by
+                  # the autofix step, restricted to the same allowlist the commit step
+                  # used. This prevents pre-existing drift in untouched files (e.g. an
+                  # unrelated JS file) from producing a chore(autofix) commit that would
+                  # cancel and skip the deploy for an otherwise-clean push.
+                  grep -E '^(app/|config/|lib/|public/|scripts/|docker/|spec/|test/|\.github/|Gemfile$|Gemfile\.lock$|package\.json$|bun\.lock|eslint\.config\.js$|stylelint\.config\.js$|prettier\.config\.js$|\.erb-lint\.yml$|\.erb-formaterrc\.json$)' \
+                    changed_files.txt > committable_files.txt || true
+                  echo "Committable files:" && cat committable_files.txt || true
+                  if [ -s committable_files.txt ]; then
+                    echo "any=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "any=false" >> "$GITHUB_OUTPUT"
+                  fi
+                  {
+                    echo "files<<COMMITTABLE_EOF"
+                    cat committable_files.txt
+                    echo "COMMITTABLE_EOF"
+                  } >> "$GITHUB_OUTPUT"
+
             - name: Run repository-wide autofixers
               if: always()
               continue-on-error: true
@@ -173,7 +192,10 @@ jobs:
                   git stash pop --quiet || true
 
             - name: Commit and push changes (if any)
-              if: always()
+              # Only commit fixes to files that were part of this push. Skip entirely
+              # when the push touched no committable files, so unrelated repo-wide drift
+              # never produces a chore(autofix) commit that blocks the deploy.
+              if: always() && steps.changes.outputs.any == 'true'
               uses: stefanzweifel/git-auto-commit-action@v7
               with:
                   commit_message: "chore(autofix): apply automated format/lint fixes"
@@ -181,22 +203,4 @@ jobs:
                   commit_user_name: github-actions[bot]
                   commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
                   skip_fetch: false
-                  file_pattern: |
-                      app/**
-                      config/**
-                      lib/**
-                      public/**
-                      scripts/**
-                      docker/**
-                      spec/**
-                      test/**
-                      .github/**
-                      Gemfile
-                      Gemfile.lock
-                      package.json
-                      bun.lock*
-                      eslint.config.js
-                      stylelint.config.js
-                      prettier.config.js
-                      .erb-lint.yml
-                      .erb-formaterrc.json
+                  file_pattern: ${{ steps.changes.outputs.files }}
