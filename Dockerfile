@@ -158,14 +158,24 @@ RUN --mount=type=secret,id=tidb_host \
        bundle exec rails assets:precompile \
     && rm -rf public/vite-dev public/vite-test'
 
-# Upload vite output to B2 and strip bulky files from the image (skipped without secrets)
-RUN --mount=type=secret,id=b2_key_id \
+# Upload vite output to B2 and strip bulky files from the image (skipped without secrets).
+# Must run with RAILS_ENV=production: the production image omits development gems
+# (e.g. listen), so booting the default development env fails. Production boot also
+# loads models that touch the DB at class-load, so TiDB secrets are mounted too.
+RUN --mount=type=secret,id=tidb_host \
+    --mount=type=secret,id=tidb_username \
+    --mount=type=secret,id=tidb_password \
+    --mount=type=secret,id=b2_key_id \
     --mount=type=secret,id=b2_secret \
     B2_ASSETS_KEY_ID="$(cat /run/secrets/b2_key_id 2>/dev/null || true)" \
     B2_ASSETS_SECRET="$(cat /run/secrets/b2_secret 2>/dev/null || true)" \
     bash -lc 'source /usr/local/rvm/scripts/rvm \
     && rvm use default \
-    && SECRET_KEY_BASE_DUMMY=1 bundle exec rake vite:upload_to_b2'
+    && export TIDB_HOST=$(cat /run/secrets/tidb_host) \
+    && export TIDB_USERNAME=$(cat /run/secrets/tidb_username) \
+    && export TIDB_PASSWORD=$(cat /run/secrets/tidb_password) \
+    && export RUBYOPT="-rbundler/setup" \
+    && SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production bundle exec rake vite:upload_to_b2'
 
 ENV VITE_ASSETS_B2_ENABLED="1"
 ENV B2_ASSETS_PUBLIC_URL="https://libreverse-legacy-static.libreverse.io/file/libreverse-legacy-assets"
