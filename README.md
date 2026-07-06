@@ -1,34 +1,8 @@
 # Libreverse
 
-## Development profiling
-
-We ship with rack-mini-profiler enabled in development. It appears as a small badge in the top-right. Click it to toggle.
-
-- Toggle visibility: the badge controls the panel; it starts hidden by default.
-- Skips assets requests to reduce noise.
-- Uses Redis for persistence when available (set REDIS_URL or default redis://127.0.0.1:6379/0).
-
-Inline steps:
-
-Use `DevProfiler.profile("Step name") { ... }` inside hotspots. Steps show up nested in the profiler UI.
-
-Deeper profiles:
-
-- StackProf sampling (wall/cpu/objects) with raw dumps you can analyze later:
-    - `Profiler.stackprof(mode: :wall, out: "tmp/stackprof.dump") { do_work }`
-- Flamegraph HTML output for visual call graphs:
-    - `Profiler.flamegraph(out: "tmp/flamegraph.html") { do_work }`
-
-Analyze StackProf dumps:
-
-```sh
-stackprof tmp/stackprof.dump --method --limit 20
-stackprof tmp/stackprof.dump --json > tmp/stackprof.json
-```
-
 Libreverse is a privacy‑centric application for curating and sharing interactive "experiences" (self‑contained HTML documents). Powered by Hotwire, it delivers a seamless, single‑page‑application (SPA) experience entirely within the Ruby on Rails ecosystem while keeping all data on whatever instance you choose to use.
 
-> **Alpha release** – this version is under active development. Expect breaking changes, incomplete features, and occasional rough edges. Planned work is tracked in our [road‑map](todo.md).
+> **Alpha release - routine maintainence only since the need for libreverse has diminished** – this version is under active development. Expect breaking changes, incomplete features, and occasional rough edges. Planned work is tracked in our [road‑map](todo.md).
 
 ---
 
@@ -53,49 +27,10 @@ Libreverse is a privacy‑centric application for curating and sharing interacti
 | --------------- | -------------------------------------------- |
 | Language        | Ruby 3.4 (YJIT enabled)                      |
 | Framework       | Rails 8.0.2 + Hotwire                        |
-| Database        | SQLite 3 (enhanced adapter)                  |
-| Build / Assets  | Vite 6 + Bun                                 |
-| Web Server      | Puma                                         |
-| Container Image | Multi‑stage Dockerfile (< 80 MB final image) |
-
----
-
-## 🚀 Quick Start (Development)
-
-1. **Clone the repository and install dependencies**
-
-    ```bash
-    git clone https://github.com/your-org/libreverse.git
-    cd libreverse
-    bin/setup # installs Ruby gems, Node packages, and prepares the DB
-    ```
-
-2. **Launch the application**
-
-    ```bash
-    bin/dev # starts Rails and Vite in watch mode at http://localhost:3000
-    ```
-
-    In development, no external mailer is required; password‑reset links are output to the console.
-
-### Prerequisites
-
-- Ruby ≥ 3.4.2 (see .ruby-version)
-- Bun ≥ 1.2 (front‑end package manager)
-- SQLite ≥ 3.41 (compiled with FTS5 and JSON1)
-- ImageMagick (for Active Storage variants)
-
-Installation helpers:
-
-## macOS / Ubuntu installation examples
-
-```bash
-# macOS
-brew install ruby bun sqlite imagemagick
-
-# Ubuntu
-sudo apt install ruby-full bun curl sqlite3 libsqlite3-dev imagemagick
-```
+| Database        | TiDB + SQLite 3 (enhanced adapter)           |
+| Build / Assets  | Vite 6 + Shakapacker                         |
+| Web Server      | Phusion Passenger                            |
+| Container Image | Multi‑stage Dockerfile                       |
 
 ---
 
@@ -161,7 +96,7 @@ documentation/  – Comprehensive guides (e.g., SQLite, security)
 scripts/        – One‑off maintenance scripts
 ```
 
-See the [`documentation/`](documentation/) directory for full guides.
+See the <https://docs.libreverse.io> for full guides.
 
 ---
 
@@ -177,13 +112,13 @@ Security is a core focus of Libreverse. Please see [SECURITY.md](SECURITY.md) fo
 2. Adhere to the [Code of Conduct](CODE_OF_CONDUCT.md).
 3. Open a pull request – we squash‑merge after review.
 
-Looking for ideas? Check the [good first issue](https://github.com/your-org/libreverse/labels/good%20first%20issue) label or our [road‑map](todo.md).
+Looking for ideas? Check the [good first issue](https://github.com/libreverse/libreverse/labels/good%20first%20issue) label or our [road‑map](todo.md).
 
 ---
 
 ## 📄 License
 
-Libreverse is dual‑licensed under the **MIT License** for source code and various permissive licenses for assets. See the [licenses/](licenses/) directory for full texts.
+Libreverse is licensed under the **APGL License** for source code and various permissive licenses for assets. See the [licenses/](licenses/) directory for full texts.
 
 ---
 
