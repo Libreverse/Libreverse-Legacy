@@ -9,6 +9,7 @@
         { path: '/search', icon: 'search', label: 'search page', popover: 'Search for experiences by name, tag, or creator' },
         { path: '/forum', icon: 'message-circle', label: 'forum', popover: 'Join community discussions and ask questions' },
         { path: '/blog', icon: 'book', label: 'blog', popover: 'Read our latest posts, updates, and community insights' },
+        { path: '/docs', icon: 'book-open', label: 'documentation', popover: 'Browse project documentation', turbo: false },
         { path: '/map', icon: 'map', label: 'map page', popover: 'Explore the interactive metaverse map' },
         { path: '/settings', icon: 'settings', label: 'settings page', popover: 'Configure your account preferences and privacy settings' }
     ]
@@ -57,11 +58,13 @@
     - current_path = request.path
     -# Public links – always visible
     - public_links.each do |item|
-        - item_is_current = (current_path == item[:path])
+        - item_is_current = (item[:path] == '/docs' ? current_path.start_with?('/docs') : current_path == item[:path])
+        - link_data = { "sidebar-item": item[:icon], "sidebar-popover-target": "item", "popover-content": item[:popover] }
+        - link_data[:turbo] = false if item[:turbo] == false
         = link_to item[:path],
                             class: "sidebar-link#{' sidebar-current' if item_is_current}",
                             aria: { label: (item_is_current ? "On #{item[:label]}" : "Go to #{item[:label]}") },
-                            data: { "sidebar-item": item[:icon], "sidebar-popover-target": "item", "popover-content": item[:popover] } do
+                            data: link_data do
             = sidebar_icon(svg_icon_data_url(item[:icon]), (item_is_current ? 'sidebar-current' : ''))
 
     -# Navigation for regular users only

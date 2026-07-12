@@ -1,6 +1,7 @@
 @use "variables";
 
-.sidebar {
+// Scope to the app navigation rail so Docsify's aside.sidebar is unaffected.
+nav.sidebar {
     border-radius: 0 12px 12px 0 !important;
     border-left: none !important;
 
@@ -177,8 +178,8 @@
 }
 
 // Override glass-sidebar mixin with our larger sizing
-.sidebar.glass-sidebar,
-.sidebar.glass-component {
+nav.sidebar.glass-sidebar,
+nav.sidebar.glass-component {
     // Force our responsive widths over the mixin defaults with highest specificity
     width: inherit;
 

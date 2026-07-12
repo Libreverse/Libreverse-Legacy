@@ -1,0 +1,45 @@
+// In-app Docsify host: keeps app nav.sidebar visible; Docsify uses its own aside.sidebar.
+
+.docsify-host {
+    position: relative;
+    min-height: 100vh;
+    // Clear the fixed app navigation rail so Docsify can lay out normally
+    padding-inline-start: calc(var(--sidebar-width-medium, 56px) + 8px);
+    box-sizing: border-box;
+    width: 100%;
+
+    @media (width <= 600px) {
+        padding-inline-start: calc(var(--sidebar-width-small, 48px) + 6px);
+    }
+
+    @media (width >= 1200px) {
+        padding-inline-start: calc(var(--sidebar-width-large, 64px) + 12px);
+    }
+
+    &__error {
+        padding: 2rem;
+        color: #c00;
+        font-family: Hack, Noto-Sans, monospace;
+    }
+
+    #docsify-app {
+        position: relative;
+        min-height: 100vh;
+    }
+
+    // Reset app-rail glass styles that would otherwise match aside.sidebar
+    // if any global rules leak (primary app styles are scoped to nav.sidebar).
+    aside.sidebar {
+        transform: none;
+        border-radius: 0;
+        display: block;
+        justify-content: initial;
+        align-items: initial;
+        overflow: auto;
+    }
+}
+
+// Prefer app rail above Docsify chrome.
+nav.sidebar {
+    z-index: 20;
+}

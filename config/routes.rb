@@ -13,6 +13,11 @@ Rails.application.routes.draw do
   root "homepage#index"
   get "terms", to: "terms#index"
   get "settings", to: "settings#index"
+
+  # In-app Docsify documentation (app layout + sidebar; no iframe)
+  get "docs", to: "documentation#index", as: :documentation
+  get "docs/content/*path", to: "documentation#content", as: :documentation_content, format: false
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

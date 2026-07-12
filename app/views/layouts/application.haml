@@ -29,6 +29,8 @@
           -# Menu
           %ul.vertical.menu
             %li
+              = link_to "Documentation", main_app.documentation_path, data: { turbo: false }
+            %li
               = link_to "Privacy Policy", main_app.privacy_path
             %li
               = link_to "Cookie Policy", main_app.cookie_policy_path

@@ -18,6 +18,9 @@ application.register("cta-particles", CtaParticlesController);
 import DismissibleController from "./dismissible_controller";
 application.register("dismissible", DismissibleController);
 
+import DocsifyController from "./docsify_controller";
+application.register("docsify", DocsifyController);
+
 import EnhancedApplicationController from "./enhanced_application_controller";
 application.register("enhanced-application", EnhancedApplicationController);
 
