@@ -98,7 +98,7 @@
                         "",
                     );
                     if (!sanitized) continue;
-                    this.participants[sanitized] = { peerId: sanitized };
+                    this.participants[sanitized] = { peerId: sanitized }; // Safe: sanitized to [a-zA-Z0-9-], prevents prototype pollution
                 }
                 this.onParticipantsChange(this.participants);
                 break;

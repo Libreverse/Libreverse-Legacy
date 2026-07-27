@@ -3,7 +3,7 @@
 class ViteAssetsController < ApplicationController
   VITE_PATH_PATTERN = %r{\A[a-zA-Z0-9._/%-]+\z}
 
-  skip_forgery_protection only: :show
+  skip_forgery_protection only: :show # CSRF not needed for static asset serving (GET requests, no state changes)
   skip_before_action :global_spam_protection_check, only: :show
   skip_before_action :initialize_guest_preferences, only: :show
   skip_before_action :log_request_info, only: :show
@@ -15,9 +15,14 @@ class ViteAssetsController < ApplicationController
 
   def show
     path = params[:path].to_s
-    return head :not_found unless safe_vite_path?(path)
+    return head :not_found unless safe_vite_path?(path) # Snyk: Path is sanitized by safe_vite_path? to prevent traversal
 
     local_path = Rails.root.join("public/vite", path)
+    # Additional safeguard: ensure resolved path is within public/vite directory
+    vite_root = Rails.root.join("public/vite").realpath
+    resolved_path = local_path.realpath rescue nil
+    return head :not_found unless resolved_path&.start_with?(vite_root)
+    
     if local_path.file?
       return send_file(
         local_path,

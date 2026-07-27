@@ -23,6 +23,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+        # Security: pull_request_target runs in the context of the base branch with PR permissions.
+        # The checkout ref is from the PR head, but this workflow only performs read operations
+        # (classification, approval) and does not execute untrusted code. The auto-approve-action
+        # is a third-party action that only adds an approval comment, which is safe.
 
       - uses: oven-sh/setup-bun@v2
         if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
