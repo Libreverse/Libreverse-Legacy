@@ -15,9 +15,10 @@ permissions:
 # -----------------------
 # Default (vars.RUN_NON_SECURITY_CHECKS unset/false): supply-chain + SAST only:
 #   Dependency gates (age gates, Socket PR scan, Snyk Open Source), Install,
-#   security-analysis (brakeman), Verify (aggregate).
+#   security-analysis (brakeman), Verify (aggregate). Build & Deploy still runs on
+#   qualifying main pushes (gated by TIDB + commit filters, not by this flag).
 # Full mode (vars.RUN_NON_SECURITY_CHECKS == 'true'): also formatters, validation,
-#   code-quality, tests, and (on main) Build & Deploy.
+#   code-quality, and tests.
 # Formatters / linters / tests are never required in security-only mode.
 
 on:
@@ -443,6 +444,7 @@ jobs:
           fi
           echo "All verify jobs passed."
 
+  # Runs on main in both full and reduced CI once verify (security gates) passes.
   # Skipped while TiDB Serverless is shut down (free tier cap). Set TIDB_INSTANCE_AVAILABLE=true to resume.
   build-push:
     name: Build & Deploy
@@ -451,7 +453,7 @@ jobs:
     permissions:
       contents: write
       packages: write
-    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && vars.TIDB_INSTANCE_AVAILABLE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
+    if: vars.TIDB_INSTANCE_AVAILABLE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
 
     steps:
       - name: Check out code
