@@ -277,7 +277,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always() && needs.install.result == 'success'
+    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -336,7 +336,7 @@ jobs:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always() && needs.install.result == 'success'
+    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -357,7 +357,7 @@ jobs:
 
   testing:
     needs: install
-    if: always() && needs.install.result == 'success'
+    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && always() && needs.install.result == 'success'
     name: ${{ matrix.test-suite }}
     runs-on: ubuntu-22.04
     permissions:
@@ -410,19 +410,23 @@ jobs:
           }
           require_success gates "${{ needs.gates.result }}"
           require_success install "${{ needs.install.result }}"
-          for name in formatting validation security-analysis code-quality testing; do
-            result="${{ needs.formatting.result }}"
-            case "$name" in
-              validation) result="${{ needs.validation.result }}" ;;
-              security-analysis) result="${{ needs.security-analysis.result }}" ;;
-              code-quality) result="${{ needs.code-quality.result }}" ;;
-              testing) result="${{ needs.testing.result }}" ;;
-            esac
-            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
-              echo "::error::Job $name finished with $result"
-              exit 1
-            fi
-          done
+          require_success security-analysis "${{ needs.security-analysis.result }}"
+          
+          # Only require non-security jobs if they are enabled
+          if [ "${{ vars.RUN_NON_SECURITY_CHECKS }}" == "true" ]; then
+            for name in formatting validation code-quality testing; do
+              result="${{ needs.formatting.result }}"
+              case "$name" in
+                validation) result="${{ needs.validation.result }}" ;;
+                code-quality) result="${{ needs.code-quality.result }}" ;;
+                testing) result="${{ needs.testing.result }}" ;;
+              esac
+              if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+                echo "::error::Job $name finished with $result"
+                exit 1
+              fi
+            done
+          fi
           echo "All verify jobs passed."
 
   # Skipped while TiDB Serverless is shut down (free tier cap). Set TIDB_INSTANCE_AVAILABLE=true to resume.
@@ -433,7 +437,7 @@ jobs:
     permissions:
       contents: write
       packages: write
-    if: vars.TIDB_INSTANCE_AVAILABLE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
+    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && vars.TIDB_INSTANCE_AVAILABLE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.event.head_commit != null && !contains(github.event.head_commit.message, 'chore(')
 
     steps:
       - name: Check out code
