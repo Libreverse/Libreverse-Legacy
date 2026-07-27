@@ -122,8 +122,8 @@ COPY . .
 # Ensure correct ownership for the app user (before bun install, so node_modules is not affected)
 RUN chown -R app:app /home/app/webapp
 
-# Now install JS dependencies (vendor/javascript/p2p should exist)
-RUN bun install --frozen-lockfile
+# Now install JS dependencies (vendor/javascript/p2p should exist) - no more frozen lockfiles.
+RUN bun install
 
 # Copy npm-provided CSS files that comfortable_media_surfer imports via Sprockets.
 # vendor/assets is always in Sprockets' default load path, so this satisfies the
@@ -191,7 +191,7 @@ RUN printf '%s\n' \
     '# Send Passenger logs to container stderr so they are captured by the orchestrator' \
     'passenger_log_file /dev/stderr;' \
     > /etc/nginx/conf.d/10-passenger-base.conf
-    
+
 # Create temp directories for NGINX and Passenger buffering
 RUN mkdir -p /home/app/webapp/tmp/nginx_body /home/app/webapp/tmp/passenger /home/app/webapp/tmp/modsec \
     && chown -R app:app /home/app/webapp/tmp \

@@ -76,10 +76,10 @@ runs:
               bundle config set without ""
               if [ "${{ inputs.use-socket-firewall }}" = "true" ]; then
                 sfw bundle install --retry 3 --jobs 4
-                sfw bun install --frozen-lockfile
+                sfw bun install
               else
                 bundle install --retry 3 --jobs 4
-                bun install --frozen-lockfile
+                bun install
               fi
 
         - name: Verify bundle installation

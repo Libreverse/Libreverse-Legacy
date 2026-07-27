@@ -1,12 +1,4 @@
 {
     "recommendations": [
-        "editorconfig.editorconfig",
-        "karunamurti.haml",
-        "dbaeumer.vscode-eslint",
-        "davidanson.vscode-markdownlint",
-        "rubocop.vscode-rubocop",
-        "shopify.ruby-lsp",
-        "stylelint.vscode-stylelint",
-        "tekumara.typos-vscode"
     ]
 }
