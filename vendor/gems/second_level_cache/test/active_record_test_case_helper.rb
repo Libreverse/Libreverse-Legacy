@@ -13,8 +13,11 @@ module ActiveRecordTestCaseHelper
 
   def capture(stream)
     stream = stream.to_s
+    captured_stream = nil
+    stream_io = nil
+    origin_stream = nil
     captured_stream = Tempfile.new(stream)
-    stream_io = eval("$#{stream}")
+    stream_io = eval("$#{stream}") # rubocop:disable Security/Eval -- test helper mirrors ActiveSupport
     origin_stream = stream_io.dup
     stream_io.reopen(captured_stream)
 
@@ -23,9 +26,9 @@ module ActiveRecordTestCaseHelper
     stream_io.rewind
     captured_stream.read
   ensure
-    captured_stream.close
-    captured_stream.unlink
-    stream_io.reopen(origin_stream)
+    captured_stream&.close
+    captured_stream&.unlink
+    stream_io&.reopen(origin_stream) if origin_stream
   end
 
   def capture_sql

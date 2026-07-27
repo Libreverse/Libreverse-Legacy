@@ -49,24 +49,25 @@ module ApplicationCable
       session_key = Rails.application.config.session_options[:key]
       Rails.logger.debug "[ActionCable][CookieStore] Attempting to find session using key: #{session_key}"
 
-      session_data = nil
-      begin
-        # For CookieStore, the entire session hash is in the cookie.
-        # Try encrypted first, then signed as fallback.
-        Rails.logger.debug "[ActionCable][CookieStore] Trying cookies.encrypted..."
-        session_data = cookies.encrypted[session_key]
-        Rails.logger.debug "[ActionCable][CookieStore] Result from cookies.encrypted: #{session_data.inspect}"
+      session_data =
+        begin
+          # For CookieStore, the entire session hash is in the cookie.
+          # Try encrypted first, then signed as fallback.
+          Rails.logger.debug "[ActionCable][CookieStore] Trying cookies.encrypted..."
+          data = cookies.encrypted[session_key]
+          Rails.logger.debug "[ActionCable][CookieStore] Result from cookies.encrypted: #{data.inspect}"
 
-        unless session_data.is_a?(Hash)
-          Rails.logger.debug "[ActionCable][CookieStore] Trying cookies.signed as fallback..."
-          session_data = cookies.signed[session_key]
-          Rails.logger.debug "[ActionCable][CookieStore] Result from cookies.signed (fallback): #{session_data.inspect}"
+          unless data.is_a?(Hash)
+            Rails.logger.debug "[ActionCable][CookieStore] Trying cookies.signed as fallback..."
+            data = cookies.signed[session_key]
+            Rails.logger.debug "[ActionCable][CookieStore] Result from cookies.signed (fallback): #{data.inspect}"
+          end
+          data
+        rescue StandardError => e
+          Rails.logger.error "[ActionCable][CookieStore] Error accessing/verifying session cookie: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          return nil
         end
-      rescue StandardError => e
-        Rails.logger.error "[ActionCable][CookieStore] Error accessing/verifying session cookie: #{e.message}"
-        Rails.logger.error e.backtrace.join("\n")
-        return nil
-      end
 
       unless session_data.is_a?(Hash)
         Rails.logger.warn "[ActionCable][CookieStore] Could not retrieve session hash from cookie ('#{session_key}'). Data: #{session_data.inspect}"
@@ -74,28 +75,27 @@ module ApplicationCable
       end
 
       # --- Extract account_id directly from the session hash ---
-      account_id = nil
       rodauth_session_key_name = :account_id # Default Rodauth key name (symbol)
       rodauth_session_key_string = rodauth_session_key_name.to_s # String version
-      begin
-        # Try to get the configured key name safely if Rodauth instance available
-        # Note: request.env['rodauth'] is likely nil here, so fallback usually runs
-        rodauth_instance = request.env["rodauth"]
-        if rodauth_instance.respond_to?(:session_key)
-           config_key = rodauth_instance.session_key
-           rodauth_session_key_name = config_key if config_key.is_a?(Symbol)
-           rodauth_session_key_string = config_key.to_s
-        end
+      account_id =
+        begin
+          # Try to get the configured key name safely if Rodauth instance available
+          # Note: request.env['rodauth'] is likely nil here, so fallback usually runs
+          rodauth_instance = request.env["rodauth"]
+          if rodauth_instance.respond_to?(:session_key)
+            config_key = rodauth_instance.session_key
+            rodauth_session_key_name = config_key if config_key.is_a?(Symbol)
+            rodauth_session_key_string = config_key.to_s
+          end
 
-        # Check for string key first (seems to be what CookieStore provides)
-        account_id = session_data[rodauth_session_key_string]
-        # Fallback to symbol key if string key wasn't found
-        account_id ||= session_data[rodauth_session_key_name]
-      rescue StandardError => e
-        Rails.logger.warn "[ActionCable][CookieStore] Error getting rodauth session key, falling back to default :account_id. Error: #{e.message}"
-        # Fallback access trying both string and symbol
-        account_id = session_data["account_id"] || session_data[:account_id]
-      end
+          # Check for string key first (seems to be what CookieStore provides),
+          # then symbol key fallback.
+          session_data[rodauth_session_key_string] || session_data[rodauth_session_key_name]
+        rescue StandardError => e
+          Rails.logger.warn "[ActionCable][CookieStore] Error getting rodauth session key, falling back to default :account_id. Error: #{e.message}"
+          # Fallback access trying both string and symbol
+          session_data["account_id"] || session_data[:account_id]
+        end
       # -------------------------------------------------------
 
       if account_id

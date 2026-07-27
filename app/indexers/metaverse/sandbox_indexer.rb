@@ -21,22 +21,21 @@ module Metaverse
       log_info "Starting Sandbox experience indexing"
       log_info "Target: #{SITEMAP_URL}"
 
-      experiences = []
-
-      begin
-        experiences = fetch_experiences_via_browser
-      rescue CloudflareBlockError => e
-        log_error "Cloudflare protection blocking access: #{e.message}"
-        # Try fallback method or return empty array
-        log_info "Attempting fallback via main sitemap..."
-        experiences = fetch_experiences_fallback
-      rescue BotProtectionError => e
-        log_error "Bot protection blocking access: #{e.message}"
-        experiences = []
-      rescue StandardError => e
-        log_error "Error fetching Sandbox experiences: #{e.message}"
-        raise
-      end
+      experiences =
+        begin
+          fetch_experiences_via_browser
+        rescue CloudflareBlockError => e
+          log_error "Cloudflare protection blocking access: #{e.message}"
+          # Try fallback method or return empty array
+          log_info "Attempting fallback via main sitemap..."
+          fetch_experiences_fallback
+        rescue BotProtectionError => e
+          log_error "Bot protection blocking access: #{e.message}"
+          []
+        rescue StandardError => e
+          log_error "Error fetching Sandbox experiences: #{e.message}"
+          raise
+        end
 
       log_info "Successfully fetched #{experiences.count} Sandbox experiences"
       experiences

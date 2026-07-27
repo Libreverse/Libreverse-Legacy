@@ -182,13 +182,14 @@ class RodauthController < ApplicationController
     return if params[:invisible_captcha_timestamp].blank?
 
       raw_ts = params[:invisible_captcha_timestamp].to_s
-      begin
-        submitted_time = Time.iso8601(raw_ts)
-      rescue ArgumentError
-        # Fallback for legacy integer timestamps
-        int_ts = raw_ts.to_i
-        submitted_time = Time.at(int_ts).utc if int_ts.positive?
-      end
+      submitted_time =
+        begin
+          Time.iso8601(raw_ts)
+        rescue ArgumentError
+          # Fallback for legacy integer timestamps
+          int_ts = raw_ts.to_i
+          int_ts.positive? ? Time.at(int_ts).utc : nil
+        end
 
       if submitted_time.present?
         current_time = Time.current.utc

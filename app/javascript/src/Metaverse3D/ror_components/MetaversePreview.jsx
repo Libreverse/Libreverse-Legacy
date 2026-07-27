@@ -9,7 +9,7 @@ import {
     useState,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Physics, useBox, usePlane, useSphere } from "@react-three/cannon";
+import { Physics, usePlane, useSphere } from "@react-three/cannon";
 import { Grid, Text } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -125,58 +125,6 @@ const Floor = () => {
                 roughness={0.95}
                 metalness={0.05}
             />
-        </mesh>
-    );
-};
-
-const DynamicBox = ({ color, position, scale = 1 }) => {
-    const [ref] = useBox(() => ({
-        mass: 2,
-        position,
-        args: [scale, scale, scale],
-        collisionFilterGroup: OBJECT_GROUP,
-        collisionFilterMask:
-            PLAYER_GROUP | GROUND_GROUP | PROVIDER_GROUP | OBJECT_GROUP,
-        material: DEFAULT_MATERIAL,
-        allowSleep: true,
-        sleepSpeedLimit: 0.1,
-        sleepTimeLimit: 1,
-        linearDamping: 0.05,
-        angularDamping: 0.1,
-    }));
-
-    return (
-        <mesh ref={ref} castShadow receiveShadow>
-            <boxGeometry args={[scale, scale, scale]} />
-            <meshStandardMaterial
-                color={color}
-                roughness={0.4}
-                metalness={0.15}
-            />
-        </mesh>
-    );
-};
-
-const FloatingSphere = ({ position }) => {
-    const [ref] = useSphere(() => ({
-        mass: 1,
-        position,
-        args: [0.6],
-        collisionFilterGroup: OBJECT_GROUP,
-        collisionFilterMask:
-            PLAYER_GROUP | GROUND_GROUP | PROVIDER_GROUP | OBJECT_GROUP,
-        material: { friction: 0.4, restitution: 0.4 },
-        allowSleep: true,
-        sleepSpeedLimit: 0.1,
-        sleepTimeLimit: 1,
-        linearDamping: 0.03,
-        angularDamping: 0.05,
-    }));
-
-    return (
-        <mesh ref={ref} castShadow receiveShadow>
-            <sphereGeometry args={[0.6, 32, 32]} />
-            <meshStandardMaterial color="#60a5fa" roughness={0.3} />
         </mesh>
     );
 };

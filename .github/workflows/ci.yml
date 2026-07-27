@@ -11,6 +11,15 @@ permissions:
     security-events: write
     actions: read # download install-job dependency artifacts
 
+# Security-only vs full CI
+# -----------------------
+# Default (vars.RUN_NON_SECURITY_CHECKS unset/false): supply-chain + SAST only:
+#   Dependency gates (age gates, Socket PR scan, Snyk Open Source), Install,
+#   security-analysis (brakeman), Verify (aggregate).
+# Full mode (vars.RUN_NON_SECURITY_CHECKS == 'true'): also formatters, validation,
+#   code-quality, tests, and (on main) Build & Deploy.
+# Formatters / linters / tests are never required in security-only mode.
+
 on:
     pull_request:
     push:
@@ -46,12 +55,12 @@ jobs:
           fi
 
       - name: Setup Bun (gates only)
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
 
       - name: Setup Ruby (gates only)
-        uses: ruby/setup-ruby@v1.310.0
+        uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
           bundler-cache: false
 
@@ -171,11 +180,12 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # Formatters are non-security; skip when RUN_NON_SECURITY_CHECKS is not true.
   formatting:
     needs: install
     name: ${{ matrix.tool }}
     runs-on: ubuntu-22.04
-    if: always() && needs.install.result == 'success'
+    if: vars.RUN_NON_SECURITY_CHECKS == 'true' && always() && needs.install.result == 'success'
     permissions:
       contents: read
     strategy:
@@ -303,11 +313,12 @@ jobs:
 
       - name: Run Hadolint
         if: matrix.tool == 'hadolint'
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
         with:
           dockerfile: Dockerfile
           failure-threshold: error
 
+  # SAST only here. Dependency CVEs / supply-chain live in `gates` (Snyk + Socket).
   security-analysis:
     needs: install
     name: ${{ matrix.tool }}
@@ -319,7 +330,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tool: [brakeman, bundle-audit, npm-audit]
+        tool: [brakeman]
     steps:
       - name: Check out code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -411,8 +422,9 @@ jobs:
           require_success gates "${{ needs.gates.result }}"
           require_success install "${{ needs.install.result }}"
           require_success security-analysis "${{ needs.security-analysis.result }}"
-          
-          # Only require non-security jobs if they are enabled
+
+          # Non-security jobs only when RUN_NON_SECURITY_CHECKS is enabled.
+          # Skipped jobs report as "skipped" and must not fail verify.
           if [ "${{ vars.RUN_NON_SECURITY_CHECKS }}" == "true" ]; then
             for name in formatting validation code-quality testing; do
               result="${{ needs.formatting.result }}"
@@ -426,6 +438,8 @@ jobs:
                 exit 1
               fi
             done
+          else
+            echo "Security-only mode: formatters/validation/code-quality/tests not required."
           fi
           echo "All verify jobs passed."
 

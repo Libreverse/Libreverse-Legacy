@@ -1,9 +1,5 @@
 import * as Y from "yjs";
 import { WebsocketProvider as YActionCableProvider } from "@y-rb/actioncable";
-import {
-    addSameOriginMessageListener,
-    readSameOriginMessageData,
-} from "./trusted_post_message.js";
 
 const DEFAULT_ICE_SERVERS = [
     { urls: "stun:stun.l.google.com:19302" },

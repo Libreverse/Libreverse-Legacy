@@ -19,7 +19,8 @@
         this.isHost = false;
         this.peerId = undefined;
         this.sessionId = undefined;
-        this.participants = {};
+        // Map avoids remote property injection / prototype pollution on peer ids
+        this.participants = new Map();
         this.messageHandlers = new Map();
         this.status = "idle";
         this.initialConfig = {};
@@ -84,7 +85,7 @@
                 break;
             }
             case "p2p-participants": {
-                this.participants = {};
+                var nextParticipants = new Map();
                 for (
                     var index = 0;
                     index < (message.participants || []).length;
@@ -98,9 +99,10 @@
                         "",
                     );
                     if (!sanitized) continue;
-                    this.participants[sanitized] = { peerId: sanitized }; // Safe: sanitized to [a-zA-Z0-9-], prevents prototype pollution
+                    nextParticipants.set(sanitized, { peerId: sanitized });
                 }
-                this.onParticipantsChange(this.participants);
+                this.participants = nextParticipants;
+                this.onParticipantsChange(Object.fromEntries(nextParticipants));
                 break;
             }
         }
@@ -152,11 +154,11 @@
     };
 
     MultiplayerService.prototype.getPeers = function () {
-        return Object.keys(this.participants);
+        return Array.from(this.participants.keys());
     };
 
     MultiplayerService.prototype.getParticipant = function (peerId) {
-        return this.participants[peerId];
+        return this.participants.get(peerId);
     };
 
     MultiplayerService.prototype.isConnected = function () {

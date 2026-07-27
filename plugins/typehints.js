@@ -643,12 +643,11 @@ export default function typehints(options = {}) {
                             path.node.left?.computed &&
                             path.node.left.property?.type !== "Identifier"
                         ) {
-                            //eslint-disable-next-line no-unused-vars
+                            /*
                             const line =
                                 path.node.loc && path.node.loc.start
                                     ? path.node.loc.start.line
                                     : "?";
-                            /*
                             console.warn(
                                 `Potential V8 deoptimization: Dynamic property at line ${line}`,
                             );

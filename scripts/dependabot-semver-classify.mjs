@@ -35,19 +35,63 @@ function classifyFromTitle(title) {
   return 'unknown';
 }
 
+function parseDiffStat(text) {
+  const lines = text.split('\n').filter((l) => l.includes('|'));
+  let total = 0;
+  for (const line of lines) {
+    const m = line.match(/\|\s*(\d+)\s*\+/);
+    if (m) total += Number(m[1]);
+  }
+  return total;
+}
+
+/**
+ * Measure lockfile churn without checking out untrusted PR code.
+ * Prefer `gh pr diff` (API) when PR_NUMBER is set; fall back to local git for offline use.
+ */
 function lockfileChurn() {
   try {
-    const diff = Bun.spawnSync(['git', 'diff', '--stat', 'origin/main...HEAD', '--', 'bun.lock', 'Gemfile.lock'], {
-      cwd: ROOT
-    });
-    const text = diff.stdout.toString();
-    const lines = text.split('\n').filter(l => l.includes('|'));
-    let total = 0;
-    for (const line of lines) {
-      const m = line.match(/\|\s*(\d+)\s*\+/);
-      if (m) total += Number(m[1]);
+    const pr = process.env.PR_NUMBER;
+    if (pr) {
+      // Use GitHub API diff so we never need an untrusted PR checkout in CI.
+      const fullDiff = Bun.spawnSync(
+        [
+          'gh',
+          'pr',
+          'diff',
+          String(pr),
+          ...(process.env.GH_REPO ? ['--repo', process.env.GH_REPO] : []),
+        ],
+        { cwd: ROOT },
+      );
+      const text = fullDiff.stdout.toString();
+      let total = 0;
+      let inLock = false;
+      for (const line of text.split('\n')) {
+        if (line.startsWith('diff --git ')) {
+          inLock = line.includes('bun.lock') || line.includes('Gemfile.lock');
+          continue;
+        }
+        if (inLock && line.startsWith('+') && !line.startsWith('+++')) {
+          total += 1;
+        }
+      }
+      return total;
     }
-    return total;
+
+    const diff = Bun.spawnSync(
+      [
+        'git',
+        'diff',
+        '--stat',
+        'origin/main...HEAD',
+        '--',
+        'bun.lock',
+        'Gemfile.lock',
+      ],
+      { cwd: ROOT },
+    );
+    return parseDiffStat(diff.stdout.toString());
   } catch {
     return 0;
   }

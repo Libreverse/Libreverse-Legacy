@@ -1,5 +1,5 @@
 name: "Security Analysis"
-description: "Run security analysis tools"
+description: "Run security analysis tools (SAST)"
 
 inputs:
     tool:
@@ -9,11 +9,7 @@ inputs:
 runs:
     using: "composite"
     steps:
-        - name: Update dependencies
-          shell: bash
-          run: |
-              bundle update
-              bun update
+        # Scan the committed tree — do not bundle/bun update first (that scanned unpinned deps).
         - name: Run Brakeman
           if: inputs.tool == 'brakeman'
           shell: bash

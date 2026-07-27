@@ -203,13 +203,30 @@ module EmailHelper
   def inline_css_content(css_content)
     return "" if css_content.blank?
 
-    # Clean up the CSS content
-    css_content.strip
-               .gsub(%r{/\*(?:[^*]|\*+[^/*])*\*/}, "") # Remove comments
-               .gsub(/\s+/, " ")         # Compress whitespace
-               .gsub(/;\s*}/, "}")       # Clean up semicolons
+    # Clean up the CSS content (comments via non-backtracking scan; CSS is local/build assets)
+    strip_css_comments(css_content.to_s)
+      .strip
+      .gsub(/\s+/, " ") # Compress whitespace
+      .gsub(/;\s*}/, "}") # Clean up semicolons
 
     # Return just the cleaned CSS content (not wrapped in tags)
+  end
+
+  # Linear-time CSS comment stripper (avoids polynomial ReDoS on nested comment-like input).
+  def strip_css_comments(css)
+    out = +""
+    i = 0
+    len = css.length
+    while i < len
+      if css[i, 2] == "/*"
+        close = css.index("*/", i + 2)
+        i = close ? close + 2 : len
+      else
+        out << css[i]
+        i += 1
+      end
+    end
+    out
   end
 
   # Fallback CSS using Foundation for Emails from CDN

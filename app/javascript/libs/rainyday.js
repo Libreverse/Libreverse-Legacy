@@ -1586,7 +1586,7 @@ CollisionMatrix.prototype.collisions = function (drop) {
 
     item = this.addAll(item, drop.gmx - 1, drop.gmy + 1);
     item = this.addAll(item, drop.gmx, drop.gmy + 1);
-    item = this.addAll(item, drop.gmx + 1, drop.gmy + 1);
+    this.addAll(item, drop.gmx + 1, drop.gmy + 1);
 
     return first;
 };
