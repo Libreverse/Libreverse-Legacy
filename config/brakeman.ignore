@@ -89,6 +89,29 @@
         22
       ],
       "note": "Path is validated by safe_vite_path? before send_file (no traversal, leading slash, or null byte) and is constrained to public/vite. Files only ever served from the Vite output dir."
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "577d94b1e681b779c778259823fabeeb4b99d09bd4ee084f69e30cbb92389c07",
+      "check_name": "SendFile",
+      "message": "Parameter value used in file name",
+      "file": "app/controllers/documentation_controller.rb",
+      "line": 32,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file(Rails.root.join(\"documentation\").join(sanitize_relative_path(params[:path])), :type => mime_for_extension(:BRAKEMAN_SAFE_LITERAL), :disposition => \"inline\", :filename => Rails.root.join(\"documentation\").join(sanitize_relative_path(params[:path])).basename.to_s)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "DocumentationController",
+        "method": "content"
+      },
+      "user_input": "params[:path]",
+      "confidence": "Weak",
+      "cwe_id": [
+        22
+      ],
+      "note": "Path is sanitized by sanitize_relative_path (no null bytes, backslashes, leading slashes, traversal segments) and validated by path_inside_documentation? to ensure it stays within DOCUMENTATION_ROOT. Extension whitelist (.md, .markdown, .html) enforced."
     }
   ],
   "brakeman_version": "7.1.0"
