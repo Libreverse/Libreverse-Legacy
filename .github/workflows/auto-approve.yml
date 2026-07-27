@@ -109,14 +109,15 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
+          REPO="${{ github.repository }}"
           if [ "${{ vars.AUTODEP_MERGE_ENABLED }}" != "true" ]; then
             echo "AUTODEP_MERGE_ENABLED is not true; approving only."
           fi
-          prs=$(gh pr list --author "dependabot[bot]" --state open --json number --jq '.[].number')
+          prs=$(gh pr list --repo "$REPO" --author "dependabot[bot]" --state open --json number --jq '.[].number')
           for pr in $prs; do
             echo "Approving PR #$pr"
-            gh pr review "$pr" --approve || true
+            gh pr review --repo "$REPO" "$pr" --approve || true
             if [ "${{ vars.AUTODEP_MERGE_ENABLED }}" = "true" ]; then
-              gh pr merge "$pr" --rebase --delete-branch --auto || echo "Merge deferred for #$pr"
+              gh pr merge --repo "$REPO" "$pr" --rebase --delete-branch --auto || echo "Merge deferred for #$pr"
             fi
           done
