@@ -90,7 +90,7 @@
         "babel-jest": "30.4.1",
         "coffeescript": "^2.7.0",
         "cssnano": "^8.0.1",
-        "cssnano-preset-advanced": "^7.0.9",
+        "cssnano-preset-advanced": "^8.0.5",
         "docsify": "^5.0.0",
         "eslint": "^10.8.0",
         "eslint-config-prettier": "^9.1.2",
