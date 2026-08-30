@@ -54,7 +54,7 @@
         "postprocessing": "^6.37.8",
         "prop-types": "^15.8.1",
         "react": "19.2.8",
-        "react-dom": "19.1.0",
+        "react-dom": "19.2.8",
         "react-on-rails": "17.0.1",
         "react_on_rails": "^2.0.0-rc.2",
         "sassy-lists": "^3.0.1",
