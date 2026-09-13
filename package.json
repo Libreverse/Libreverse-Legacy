@@ -80,7 +80,7 @@
     },
     "devDependencies": {
         "@babel/core": "8.0.1",
-        "@babel/preset-env": "7.26.9",
+        "@babel/preset-env": "8.0.2",
         "@coffeelint/cli": "^5.2.11",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
